@@ -81,6 +81,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://10.0.0.34:5173",
 ]
 
+# backend/config/settings.py
+CORS_ALLOW_CREDENTIALS = True
+
 # Helpful when you post from the browser (prevents CSRF warnings in dev)
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
