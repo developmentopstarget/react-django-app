@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ItemPage from "./ItemPage.jsx";
 
 export default function App() {
   const [status, setStatus] = useState("Checking...");
@@ -12,12 +13,15 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6">
       <h1 className="text-3xl font-bold text-blue-700 mb-4">React + Django</h1>
-      <div className="p-6 rounded-2xl border shadow-sm bg-white">
+
+      <div className="p-6 rounded-2xl border shadow-sm bg-white mb-8">
         <p className="text-gray-700">Health: {status}</p>
         {error && <p className="text-red-500 mt-2">Error: {error}</p>}
       </div>
+
+      <ItemPage />
     </div>
   );
 }
