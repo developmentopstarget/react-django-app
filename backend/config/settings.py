@@ -15,6 +15,7 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 # ).split(",")
 ALLOWED_HOSTS = [
     "127.0.0.1",
+    "10.0.0.114",
     "localhost",
     "0.0.0.0",
     "10.0.0.34",  # your Mac’s LAN IP (for mobile access)
@@ -30,7 +31,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",   # ← required
+    "rest_framework.authtoken", # <-- for token authentication
     "corsheaders",   # ← add
+    "djoser",           # ← for authentication
     "api",              # ← your app
 ]
 
@@ -73,18 +76,35 @@ STATIC_URL = "static/"
 
 
 # Allow your frontend origins (both localhost and 127.0.0.1 on common ports)
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",  # Vite default
+#     "http://127.0.0.1:5173",
+#     "http://localhost:3000",  # CRA/Next
+#     "http://127.0.0.1:3000",
+#     "http://10.0.0.34:5173",
+# ]
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",  # CRA/Next
-    "http://127.0.0.1:3000",
-    "http://10.0.0.34:5173",
+    "http://localhost:5173",
+    "http://10.0.0.114:5173",
 ]
 
 # backend/config/settings.py
 CORS_ALLOW_CREDENTIALS = True
 
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "10.0.0.114"]
+
 # Helpful when you post from the browser (prevents CSRF warnings in dev)
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 
+# Check your active IP before starting servers.
+# On macOS/Linux:
+#> ifconfig | grep inet
+# On Windows:
+#> ipconfig
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+}
