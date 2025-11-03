@@ -1,28 +1,19 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, ".env"))
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Load environment
+load_dotenv(os.path.join(Path(__file__).resolve().parent.parent, ".env"))
+
+
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # <-- Add this line
+OPENAI_ORGANIZATION = os.getenv("OPENAI_ORGANIZATION") # <-- Add this line
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
-# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0").split(",")
-# ALLOWED_HOSTS = os.getenv(
-#     "ALLOWED_HOSTS",
-#     "127.0.0.1,localhost,0.0.0.0,10.0.0.34"
-# ).split(",")
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "10.0.0.114",
-    "localhost",
-    "0.0.0.0",
-    "10.0.0.34",  # your Mac’s LAN IP (for mobile access)
-]
-
-
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -75,18 +66,6 @@ DATABASES = {
 
 STATIC_URL = "static/"
 
-# CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS",
-#     "http://127.0.0.1:5173,http://localhost:5173").split(",")
-
-
-# Allow your frontend origins (both localhost and 127.0.0.1 on common ports)
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",  # Vite default
-#     "http://127.0.0.1:5173",
-#     "http://localhost:3000",  # CRA/Next
-#     "http://127.0.0.1:3000",
-#     "http://10.0.0.34:5173",
-# ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://10.0.0.114:5173",

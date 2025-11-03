@@ -46,6 +46,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             user_query = message[4:].strip()
             try:
                 openai.api_key = settings.OPENAI_API_KEY
+                openai.organization = settings.OPENAI_ORGANIZATION
                 response = await openai.ChatCompletion.acreate(
                     model="gpt-3.5-turbo", # Use a chat completion model
                     messages=[
