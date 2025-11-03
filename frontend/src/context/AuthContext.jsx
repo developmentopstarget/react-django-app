@@ -7,15 +7,12 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Base URL for your Django backend
     const API_URL = 'http://127.0.0.1:8000/api/auth/';
 
     useEffect(() => {
-        // Check for token in localStorage on initial load
         const token = localStorage.getItem('token');
         if (token) {
             axios.defaults.headers.common['Authorization'] = `Token ${token}`;
-            // Optionally, verify the token or fetch user details
             axios.get(`${API_URL}users/me/`)
                 .then(response => {
                     setUser(response.data);
@@ -50,7 +47,6 @@ export const AuthProvider = ({ children }) => {
     const register = async (username, email, password) => {
         try {
             await axios.post(`${API_URL}users/`, { username, email, password });
-            // Optionally, log in the user immediately after registration
             return login(username, password);
         } catch (error) {
             console.error('Registration failed:', error);
