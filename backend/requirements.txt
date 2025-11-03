@@ -2,3 +2,8 @@ Django
 djangorestframework
 django-cors-headers
 python-dotenv
+djoser
+channels
+channels-redis
+daphne
+openai==0.28

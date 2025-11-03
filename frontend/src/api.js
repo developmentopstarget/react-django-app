@@ -1,58 +1,33 @@
-// frontend/src/api.js
-const API_BASE = import.meta.env.VITE_API_URL?.replace(/\/$/, '') || '';
+const protocol = import.meta.env.VITE_API_PROTOCOL || window.location.protocol.replace(':','');
+const host     = import.meta.env.VITE_API_HOST     || window.location.hostname;
+const port     = import.meta.env.VITE_API_PORT     || '8000';
+const API_BASE = import.meta.env.VITE_API_URL || `${protocol}://${host}:${port}`;
+console.log('API_BASE =', API_BASE);
 
 function getCookie(name) {
-  if (typeof document === 'undefined') return null;
-  const m = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'));
-  return m ? decodeURIComponent(m[2]) : null;
+  const m = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return m ? decodeURIComponent(m.pop()) : '';
 }
 
-async function request(path, { method = 'GET', body, headers = {}, signal } = {}) {
-  const opts = {
+async function api(path, { method = 'GET', body, csrf = false } = {}) {
+  const headers = { Accept: 'application/json' };
+  if (body) headers['Content-Type'] = 'application/json';
+  if (csrf) headers['X-CSRFToken'] = getCookie('csrftoken');
+
+  const res = await fetch(`${API_BASE}${path}`, {
     method,
-    headers: {
-      'Accept': 'application/json',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...headers,
-    },
+    headers,
     credentials: 'include',
-    signal,
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  };
-
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    const csrftoken = getCookie('csrftoken');
-    if (csrftoken) opts.headers['X-CSRFToken'] = csrftoken;
-  }
-
-  const res = await fetch(`${API_BASE}${path}`, opts);
-  if (!res.ok) {
-    let detail;
-    try { detail = await res.json(); } catch { detail = { detail: res.statusText }; }
-    const err = new Error(detail?.detail || `HTTP ${res.status}`);
-    err.status = res.status;
-    err.payload = detail;
-    throw err;
-  }
-  if (res.status === 204) return null;
-  return res.json();
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.detail || 'Request failed'), { status: res.status, data });
+  return data;
 }
 
-// add helper for querystring
-function qs(params = {}) {
-  const p = new URLSearchParams(
-    Object.entries(params).filter(([, v]) => v != null && v !== '')
-  );
-  const s = p.toString();
-  return s ? `?${s}` : '';
-}
-
-export const api = {
-  listItems: ({ search, signal } = {}) =>
-    request(`/api/items/${qs({ search })}`, { signal }),
-  createItem: (data) => request('/api/items/', { method: 'POST', body: data }),
-  patchItem: (id, data) => request(`/api/items/${id}/`, { method: 'PATCH', body: data }),
-  deleteItem: (id) => request(`/api/items/${id}/`, { method: 'DELETE' }),
+export const auth = {
+  csrf: () => api('/api/auth/csrf/'),
+  login: (username, password) => api('/api/auth/login/', { method: 'POST', body: { username, password }, csrf: true }),
+  logout: () => api('/api/auth/logout/', { method: 'POST', csrf: true }),
+  me: () => api('/api/auth/user/'),
 };
-
-

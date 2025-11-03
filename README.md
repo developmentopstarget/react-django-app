@@ -1,134 +1,127 @@
+# Full-Stack Chat Application with React, Django, and Hybrid AI
 
+## Description
+A modern full-stack web application featuring user authentication, real-time chat, and hybrid AI/human support. The frontend is built with React and Tailwind CSS, while the backend is powered by Django and Django REST Framework, utilizing Django Channels for WebSocket communication.
 
-# React + Tailwind CSS + Django Starter
-
-A modern full-stack template: **React (Vite) + Tailwind CSS** on the frontend, **Django + Django REST Framework** on the backend. Comes with CORS configured, environment variables, and a clear dev workflow.
-
-## Features
-- ⚡ Vite + React with Tailwind CSS and ESLint
-- 🐍 Django REST API with Django REST Framework
-- 🔐 .env support (frontend & backend)
-- 🔁 Hot reload on both servers
-- 🌐 CORS preconfigured (frontend ↔ backend)
-- ✅ Prewired formatting (Prettier) and linting (ESLint/flake8 optional)
+## Key Features
+*   **User Authentication:** Secure user registration and login with token-based authentication (Djoser).
+*   **Real-time Chat:** Instant messaging capabilities using WebSockets (Django Channels and `react-use-websocket`).
+*   **Hybrid AI Integration:** AI-powered responses in the chat using the OpenAI API, allowing for automated assistance.
+*   **Admin Panel:** Django's built-in administration interface for managing users and other data.
 
 ## Tech Stack
-**Frontend:** Vite, React, Tailwind CSS  
-**Backend:** Python, Django, Django REST Framework, django-cors-headers  
-**DB (default):** SQLite (swap via \`DATABASE_URL\`)
+**Frontend:**
+*   React (Vite)
+*   Tailwind CSS
+*   Axios
+*   React Router DOM
+*   React Use WebSocket
 
-## Project Structure
+**Backend:**
+*   Python
+*   Django
+*   Django REST Framework
+*   Django Channels
+*   Channels Redis
+*   Daphne
+*   Djoser
+*   OpenAI Python Library
+*   python-dotenv
 
-.  
-├─ backend/  
-│ ├─ manage.py  
-│ ├─ requirements.txt  
-│ ├─.env.example  
-│ ├─ config/ # Django project (settings, urls, wsgi/asgi)  
-│ └─ api/ # Example app (views/serializers/models)  
-└─ frontend/  
-├─ index.html  
-├─ package.json  
-├─.env.example  
-├─ src/  
-│ ├─ main.tsx /.jsx  
-│ ├─ App.tsx /.jsx  
-│ └─ lib/api.ts # API helper uses VITE\_API\_URL  
-└─ tailwind.config.js
+**Database:**
+*   SQLite (default, easily configurable for PostgreSQL)
 
-### 2) Backend (Django)
+## Getting Started
 
-**`backend/.env.example`**
+Follow these instructions to set up and run the project locally.
 
-### 3) Frontend (React + Tailwind)
+### Prerequisites
+*   Python 3.8+
+*   Node.js (LTS version)
+*   npm or Yarn
+*   Redis Server (running on `localhost:6379`)
 
-Open a new terminal:
+### 1. Clone the Repository
+```bash
+git clone <your-repository-url>
+cd react-django-app
+```
 
-**`frontend/.env.example`**
+### 2. Backend Setup (Django)
 
-Now visit the frontend dev server (Vite prints the URL, usually `http://localhost:5173`).
+Navigate to the `backend` directory:
+```bash
+cd backend
+```
 
-## Scripts
+**Create and Activate Virtual Environment:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
-**Frontend**
+**Install Python Dependencies:**
+```bash
+pip install -r requirements.txt
+```
 
-- `npm run dev` – start Vite dev server
-- `npm run build` – production build
-- `npm run preview` – preview build
-- `npm run lint` – run ESLint
-- `npm run format` – run Prettier
+**Configure Environment Variables:**
+Create a `.env` file in the `backend/` directory and add your OpenAI API key:
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+Replace `your_openai_api_key_here` with your actual OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys).
 
-**Backend**
+**Run Database Migrations:**
+```bash
+python3 manage.py migrate
+```
 
-- `python manage.py runserver` – start Django dev server
-- `python manage.py migrate` – apply DB migrations
-- `python manage.py createsuperuser` – admin user
+**Create a Superuser (for Admin Panel access):**
+```bash
+python3 manage.py createsuperuser
+```
+Follow the prompts to create your admin user.
 
-## API Example
+**Start the Daphne Server:**
+```bash
+daphne -b 0.0.0.0 -p 8000 config.asgi:application
+```
+Keep this terminal running.
 
-- `GET /api/health/` → `{ "status": "ok" }`
-- `GET /api/items/` → list items
-- `POST /api/items/` → create item (JSON body)
+### 3. Frontend Setup (React)
 
-(Endpoints live under `backend/api/`. Feel free to delete/replace the sample app.)
+Open a **new terminal** and navigate to the `frontend` directory:
+```bash
+cd ../frontend
+```
 
-## Configuration Notes
+**Install Node.js Dependencies:**
+```bash
+npm install
+```
 
-### CORS
+**Start the React Development Server:**
+```bash
+npm run dev
+```
+Keep this terminal running.
 
-Set `CORS_ALLOWED_ORIGINS` in `backend/.env` to your frontend URL(s). The starter includes `django-cors-headers` and middleware wiring.
+## Usage
 
-### Environment Variables
-
-- **Backend:**`backend/.env` (loaded in Django settings)
-- **Frontend:**`frontend/.env` (Vite exposes variables prefixed with `VITE_`)
-
-### Database
-
-- Default is SQLite (no config needed).
-- For Postgres, set `DATABASE_URL` in `backend/.env` and add `psycopg[binary]` to `requirements.txt`.
-
-## Deployment (outline)
-
-- **Backend:** Deploy to services like Railway, Render, Fly.io, or a VPS. Set `DEBUG=False`, add your domain to `ALLOWED_HOSTS`, run `collectstatic` if using static files.
-- **Frontend:**`npm run build` then serve the `dist/` folder (Netlify, Vercel, or any static host). Set `VITE_API_URL` to your backend’s public URL.
-
-## Testing (optional)
-
-- Backend: `pytest` or Django’s test runner
-- Frontend: `vitest` + React Testing Library
-
-## Linting & Formatting (optional)
-
-- Backend: `flake8`, `black`, `isort`
-- Frontend: ESLint + Prettier (already set up in this template)
+1.  Open your web browser and navigate to the URL provided by the React development server (usually `http://localhost:5173`).
+2.  **Register** a new user or **Log in** with your superuser credentials.
+3.  Navigate to the `/chat` page.
+4.  **Send a message to the AI:** In the chat input, type a message starting with `/ai ` (e.g., `/ai What is the capital of France?`). The AI will respond.
+5.  **Real-time Chat:** Open another browser window (or incognito tab), log in with a different user, and navigate to the `/chat` page. Messages sent from either user will appear in both windows.
 
 ## Contributing
-
-PRs and issues welcome. Keep commits small and focused.
+Feel free to fork the repository, open issues, or submit pull requests.
 
 ## License
-
-Choose one: MIT (permissive), Apache-2.0 (patent protection), GPL-3.0 (copyleft). Replace this section with your choice.
+[Choose your license, e.g., MIT License]
 
 ## Acknowledgements
-
-- React, Vite, Tailwind CSS
-- Django, Django REST Framework
-
-## Python
-
-backend/.venv/  
-backend/ **pycache** /  
-backend/*.sqlite3  
-backend/\*\*/*.pyc
-
-## Node
-
-frontend/node\_modules/  
-frontend/dist/
-
-## Env files
-
-\*\*/.env  
-\*\*/.env.local
+*   React, Vite, Tailwind CSS
+*   Django, Django REST Framework, Django Channels
+*   OpenAI

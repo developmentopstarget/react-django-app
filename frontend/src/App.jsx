@@ -1,27 +1,39 @@
-import { useEffect, useState } from "react";
-import ItemPage from "./ItemPage.jsx";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Home from './components/Home';
+import Login from './components/Login';
+import Register from './components/Register';
+import Dashboard from './components/Dashboard';
+import PrivateRoute from './components/PrivateRoute';
+import Chat from './components/Chat'; // <-- Add this line
 
 export default function App() {
-  const [status, setStatus] = useState("Checking...");
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/health/`)
-      .then(res => res.json())
-      .then(data => setStatus(data.status))
-      .catch(err => setError(err.message));
-  }, []);
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold text-blue-700 mb-4">React + Django</h1>
-
-      <div className="p-6 rounded-2xl border shadow-sm bg-white mb-8">
-        <p className="text-gray-700">Health: {status}</p>
-        {error && <p className="text-red-500 mt-2">Error: {error}</p>}
-      </div>
-
-      <ItemPage />
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route // <-- Add this new route
+            path="/chat"
+            element={
+              <PrivateRoute>
+                <Chat />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

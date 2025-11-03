@@ -7,6 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") # <-- Add this line
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0").split(",")
 # ALLOWED_HOSTS = os.getenv(
@@ -15,6 +16,7 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 # ).split(",")
 ALLOWED_HOSTS = [
     "127.0.0.1",
+    "10.0.0.114",
     "localhost",
     "0.0.0.0",
     "10.0.0.34",  # your Mac’s LAN IP (for mobile access)
@@ -30,8 +32,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",   # ← required
+    "rest_framework.authtoken", # <-- for token authentication
     "corsheaders",   # ← add
+    "djoser",           # ← for authentication
+    "channels",         # ← for websockets
     "api",              # ← your app
+    "chat",             # ← your new chat app
 ]
 
 MIDDLEWARE = [
@@ -58,6 +64,7 @@ TEMPLATES = [{
     ]},
 }]
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
     "default": {
@@ -73,18 +80,44 @@ STATIC_URL = "static/"
 
 
 # Allow your frontend origins (both localhost and 127.0.0.1 on common ports)
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",  # Vite default
+#     "http://127.0.0.1:5173",
+#     "http://localhost:3000",  # CRA/Next
+#     "http://127.0.0.1:3000",
+#     "http://10.0.0.34:5173",
+# ]
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",  # CRA/Next
-    "http://127.0.0.1:3000",
-    "http://10.0.0.34:5173",
+    "http://localhost:5173",
+    "http://10.0.0.114:5173",
 ]
 
 # backend/config/settings.py
 CORS_ALLOW_CREDENTIALS = True
 
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "10.0.0.114"]
+
 # Helpful when you post from the browser (prevents CSRF warnings in dev)
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 
+# Check your active IP before starting servers.
+# On macOS/Linux:
+#> ifconfig | grep inet
+# On Windows:
+#> ipconfig
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}

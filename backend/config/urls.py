@@ -1,3 +1,4 @@
+# backend/config/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
@@ -14,4 +15,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health/", health),
     path("api/", include(router.urls)),
+    # --- auth endpoints ---
+    path('api/auth/', include('djoser.urls')),
+    path('api/auth/', include('djoser.urls.authtoken')),
 ]
