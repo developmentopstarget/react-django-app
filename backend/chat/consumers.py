@@ -3,6 +3,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.authtoken.models import Token
+import openai # <-- Add this import
+from django.conf import settings # <-- Add this import
 
 @database_sync_to_async
 def get_user(token_key):
@@ -34,9 +36,32 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
 
+        # Send user message to room group
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat_message", "message": message}
+            self.room_group_name, {"type": "chat_message", "message": f"{self.scope['user'].username}: {message}"}
         )
+
+        # Check if message is for AI
+        if message.lower().startswith("/ai "):
+            user_query = message[4:].strip()
+            try:
+                openai.api_key = settings.OPENAI_API_KEY
+                response = await openai.ChatCompletion.acreate(
+                    model="gpt-3.5-turbo", # Use a chat completion model
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": user_query}
+                    ],
+                    max_tokens=150
+                )
+                ai_response = response.choices[0].message.content.strip()
+            except Exception as e:
+                ai_response = f"Error: {e}"
+
+            # Send AI response to room group
+            await self.channel_layer.group_send(
+                self.room_group_name, {"type": "chat_message", "message": f"AI: {ai_response}"}
+            )
 
     async def chat_message(self, event):
         message = event["message"]
