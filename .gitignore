@@ -18,3 +18,16 @@ cookies.txt
 .nvmrc
 
 .DS_Store
+backend/.env
+.env
+
+# Editor/local files
+.vscode/
+
+# Local browser/API test files
+frontend/cookies.txt
+
+# Secrets
+backend/.env
+.env
+*.env
