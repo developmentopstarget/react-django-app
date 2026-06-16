@@ -11,6 +11,10 @@ dist/
 # Editor
 .vscode/
 
+# Python virtual environments
+backend/.venv/
+backend/.venv.old/
+
 # Other
 
 cookies.txt
