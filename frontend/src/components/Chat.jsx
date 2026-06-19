@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from '../context/AuthContext';
 
+const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8001').replace(/\/$/, '');
+
 const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -9,10 +11,10 @@ const Chat = () => {
 
     const roomName = 'general';
     const token = localStorage.getItem('token');
-    const socketUrl = `ws://localhost:8001/ws/chat/${roomName}/?token=${token}`;
+    const socketUrl = token ? `${WS_BASE_URL}/ws/chat/${roomName}/?token=${token}` : null;
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
-        shouldReconnect: (closeEvent) => true,
+        shouldReconnect: () => true,
     });
 
     useEffect(() => {
@@ -24,6 +26,7 @@ const Chat = () => {
 
     const handleSendMessage = (e) => {
         e.preventDefault();
+
         if (input.trim()) {
             sendMessage(JSON.stringify({ message: input }));
             setInput('');
@@ -47,6 +50,7 @@ const Chat = () => {
             <div className="p-4 bg-gray-200 text-center">
                 <span>The WebSocket is currently {connectionStatus}</span>
             </div>
+
             <div className="flex-grow p-6 overflow-auto">
                 <div className="space-y-4">
                     {messages.map((message, index) => (
@@ -56,6 +60,7 @@ const Chat = () => {
                     ))}
                 </div>
             </div>
+
             <div className="p-4 bg-white border-t">
                 <form onSubmit={handleSendMessage} className="flex">
                     <input
