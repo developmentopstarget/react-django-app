@@ -1,18 +1,24 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
     const { user, loading } = useAuth();
-    console.log('PrivateRoute rendering, loading:', loading, 'user:', user);
+    const location = useLocation();
 
     if (loading) {
-        console.log('PrivateRoute: loading');
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>; // Or a spinner
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-gray-600">Loading...</div>
+            </div>
+        );
     }
 
-    console.log('PrivateRoute: not loading, user:', user);
-    return user ? children : <Navigate to="/login" replace />;
+    if (!user) {
+        return <Navigate to="/login" replace state={{ from: location }} />;
+    }
+
+    return children;
 };
 
 export default PrivateRoute;
