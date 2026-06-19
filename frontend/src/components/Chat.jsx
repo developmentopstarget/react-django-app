@@ -9,7 +9,7 @@ const Chat = () => {
 
     const roomName = 'general';
     const token = localStorage.getItem('token');
-    const socketUrl = `ws://${window.location.host.split(':')[0]}:8000/ws/chat/${roomName}/?token=${token}`;
+    const socketUrl = `ws://localhost:8001/ws/chat/${roomName}/?token=${token}`;
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
         shouldReconnect: (closeEvent) => true,

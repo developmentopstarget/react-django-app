@@ -7,7 +7,8 @@ A modern full-stack web application featuring user authentication, real-time cha
 *   **User Authentication:** Secure user registration and login with token-based authentication (Djoser).
 *   **Real-time Chat:** Instant messaging capabilities using WebSockets (Django Channels and `react-use-websocket`).
 *   **Hybrid AI Integration:** AI-powered responses in the chat using the OpenAI API, allowing for automated assistance.
-*   **Admin Panel:** Django's built-in administration interface for managing users and other data.
+*   **Admin Panel:** Django's built-in administration interface for managing users and viewing chat messages.
+*   **Dedicated AI User:** AI-generated messages are attributed to a dedicated "AI" user for clarity.
 
 ## Tech Stack
 **Frontend:**
@@ -83,15 +84,26 @@ python3 manage.py createsuperuser
 ```
 Follow the prompts to create your admin user.
 
-**Start the Daphne Server:**
+**Start the Backend Servers:**
+This project requires two backend servers to run simultaneously:
+*   **Daphne:** For WebSocket connections (real-time chat).
+*   **Django Development Server:** For the admin panel and other standard HTTP requests.
+
+In one terminal, start the **Daphne server** on port 8001:
 ```bash
-daphne -b 0.0.0.0 -p 8000 config.asgi:application
+daphne -b 0.0.0.0 -p 8001 config.asgi:application
+```
+Keep this terminal running.
+
+In a **new terminal**, start the **Django development server** on port 8000:
+```bash
+python3 manage.py runserver 0.0.0.0:8000
 ```
 Keep this terminal running.
 
 ### 3. Frontend Setup (React)
 
-Open a **new terminal** and navigate to the `frontend` directory:
+Open a **third terminal** and navigate to the `frontend` directory:
 ```bash
 cd ../frontend
 ```
@@ -107,9 +119,16 @@ npm run dev
 ```
 Keep this terminal running.
 
+## Accessing the Application
+
+*   **Frontend:** [http://localhost:5173](http://localhost:5173)
+*   **Admin Panel:** [http://localhost:8000/admin/](http://localhost:8000/admin/)
+
+Log in to the admin panel with your superuser credentials to view and manage chat messages.
+
 ## Usage
 
-1.  Open your web browser and navigate to the URL provided by the React development server (usually `http://localhost:5173`).
+1.  Open your web browser and navigate to the frontend URL.
 2.  **Register** a new user or **Log in** with your superuser credentials.
 3.  Navigate to the `/chat` page.
 4.  **Send a message to the AI:** In the chat input, type a message starting with `/ai ` (e.g., `/ai What is the capital of France?`). The AI will respond.

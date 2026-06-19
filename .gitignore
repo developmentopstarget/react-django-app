@@ -11,6 +11,10 @@ dist/
 # Editor
 .vscode/
 
+# Python virtual environments
+backend/.venv/
+backend/.venv.old/
+
 # Other
 
 cookies.txt
@@ -18,3 +22,22 @@ cookies.txt
 .nvmrc
 
 .DS_Store
+
+# Generated files
+backend/staticfiles/
+staticfiles/
+
+# Local env
+backend/.venv/
+backend/.venv.old/
+.env
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+
+# Node / frontend
+node_modules/
+dist/
+build/
