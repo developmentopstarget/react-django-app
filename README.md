@@ -119,9 +119,66 @@ npm run dev
 ```
 Keep this terminal running.
 
+### 4. Running Tests
+
+**Backend:**
+```bash
+cd backend
+python manage.py test
+```
+
+**Frontend (production build check):**
+```bash
+cd frontend
+npm run build
+```
+
+## Docker Compose
+
+The Docker Compose stack runs Postgres, Redis, Django (Daphne), and a React build
+served by Nginx — all with a single command.
+
+`db`, `migrate`, and `backend` read environment variables from `backend/.env`.
+The `frontend` service contains the React app compiled into its Nginx image at build
+time; it does not use `backend/.env`.
+
+**Prerequisites:** copy `backend/.env.example` to `backend/.env` and fill in at minimum
+`DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `SECRET_KEY`.
+
+**Start the stack:**
+```bash
+docker compose --env-file backend/.env up
+```
+
+**Stop the stack (preserves Postgres data):**
+```bash
+docker compose --env-file backend/.env down
+```
+
+> **Warning:** Do **not** add `-v` to the down command unless you intend to permanently
+> delete all Postgres data. The `-v` flag removes the `postgres_data` named volume.
+
+**Verify the stack is up** (Compose maps host port 80 → container port 80 on `frontend`):
+```bash
+curl -I http://localhost           # Nginx returns 200
+curl http://localhost/api/items/   # returns 401 unless authenticated
+```
+
+## CI / GitHub Actions
+
+The `.github/workflows/ci.yml` workflow runs on every push and pull request to `main`
+with three parallel jobs:
+
+| Job | What it does |
+|---|---|
+| `backend-tests` | Installs Python 3.13 deps and runs `python manage.py test` |
+| `frontend-build` | Installs Node 22 deps (`npm ci`) and runs `npm run build` |
+| `docker-build` | Builds the `backend` and `frontend` Docker images |
+
 ## Accessing the Application
 
-*   **Frontend:** [http://localhost:5173](http://localhost:5173)
+*   **Frontend — Vite local dev:** [http://localhost:5173](http://localhost:5173)
+*   **Frontend — Docker/Nginx:** [http://localhost](http://localhost)
 *   **Admin Panel:** [http://localhost:8000/admin/](http://localhost:8000/admin/)
 
 Log in to the admin panel with your superuser credentials to view and manage chat messages.
