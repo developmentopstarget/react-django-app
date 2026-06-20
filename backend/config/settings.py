@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -142,11 +143,13 @@ REST_FRAMEWORK = {
     ),
 }
 
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            "hosts": [REDIS_URL],
         },
     },
 }
