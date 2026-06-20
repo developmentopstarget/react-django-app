@@ -4,8 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser, User
 from rest_framework.authtoken.models import Token
-import openai
-from django.conf import settings
+from openai import AsyncOpenAI
 from .models import Message
 
 @database_sync_to_async
@@ -69,8 +68,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message.lower().startswith("/ai "):
             user_query = message[4:].strip()
             try:
-                openai.api_key = settings.OPENAI_API_KEY
-                response = await openai.ChatCompletion.acreate(
+                client = AsyncOpenAI()
+                response = await client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are a helpful assistant."},
