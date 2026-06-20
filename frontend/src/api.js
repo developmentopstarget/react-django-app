@@ -34,18 +34,4 @@ async function api(path, { method = 'GET', body, csrf = false } = {}) {
   return data;
 }
 
-export const auth = {
-  csrf: () => api('/api/auth/csrf/'),
-  login: (username, password) => api('/api/auth/login/', {
-    method: 'POST',
-    body: { username, password },
-    csrf: true,
-  }),
-  logout: () => api('/api/auth/logout/', {
-    method: 'POST',
-    csrf: true,
-  }),
-  me: () => api('/api/auth/user/'),
-};
-
 export default api;
