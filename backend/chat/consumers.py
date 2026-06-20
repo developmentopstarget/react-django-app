@@ -1,4 +1,5 @@
 import json
+from urllib.parse import parse_qs
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser, User
@@ -32,14 +33,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f"chat_{self.room_name}"
 
         # Get token from query string
-        token_key = self.scope['query_string'].decode().split('=')[1]
-        self.scope['user'] = await get_user(token_key)
+        qs = parse_qs(self.scope.get("query_string", b"").decode())
+        token_key = qs.get("token", [None])[0]
 
-        if self.scope['user'].is_anonymous:
-            await self.close()
-        else:
-            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-            await self.accept()
+        if not token_key:
+            await self.close(code=4001)
+            return
+
+        self.scope["user"] = await get_user(token_key)
+
+        if self.scope["user"].is_anonymous:
+            await self.close(code=4001)
+            return
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
