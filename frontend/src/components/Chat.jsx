@@ -46,7 +46,7 @@ const Chat = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col h-screen bg-gray-100">
+        <div className="flex h-[calc(100vh-65px)] flex-col bg-gray-100">
             <div className="p-4 bg-gray-200 text-center">
                 <span>The WebSocket is currently {connectionStatus}</span>
             </div>
