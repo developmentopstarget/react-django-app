@@ -84,15 +84,54 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_URL = os.getenv("DATABASE_URL")
+DB_HOST = os.getenv("DB_HOST")
+
+if DATABASE_URL:
+    from urllib.parse import urlparse
+
+    db_url = urlparse(DATABASE_URL)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": db_url.path.lstrip("/"),
+            "USER": db_url.username or "",
+            "PASSWORD": db_url.password or "",
+            "HOST": db_url.hostname or "localhost",
+            "PORT": str(db_url.port or 5432),
+        }
     }
-}
+elif DB_HOST:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "appdb"),
+            "USER": os.getenv("DB_USER", "appuser"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": DB_HOST,
+            "PORT": os.getenv("DB_PORT", "5432"),
+        }
+    }
+elif DJANGO_ENV == "production":
+    from django.core.exceptions import ImproperlyConfigured
+
+    raise ImproperlyConfigured("DATABASE_URL or DB_HOST must be set in production.")
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
