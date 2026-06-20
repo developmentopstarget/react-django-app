@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?DB_USER must be set via --env-file backend/.env}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:?DB_USER must be set via --env-file backend/.env} -d ${DB_NAME:?DB_NAME must be set via --env-file backend/.env}"]
       interval: 5s
       timeout: 5s
       retries: 5
