@@ -12,8 +12,15 @@ def csv_env(name: str, default: str) -> list[str]:
     return [value.strip() for value in os.getenv(name, default).split(",") if value.strip()]
 
 
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+DJANGO_ENV = os.getenv("DJANGO_ENV", "development").lower()
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    if DJANGO_ENV == "production":
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("SECRET_KEY environment variable must be set in production.")
+    SECRET_KEY = "dev-only-fallback-not-safe-for-production"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 ALLOWED_HOSTS = csv_env(
@@ -90,6 +97,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.TokenAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
     ),
 }
 
