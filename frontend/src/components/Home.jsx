@@ -3,37 +3,55 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
-    const { user, logout } = useAuth();
+    const { user } = useAuth();
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl font-extrabold text-gray-900">Welcome to the Home Page</h1>
-            <div className="mt-8 space-x-4">
-                {user ? (
-                    <>
-                        <p className="text-lg text-gray-700">Hello, {user.username}!</p>
-                        <button
-                            onClick={logout}
-                            className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                        >
-                            Logout
-                        </button>
-                        <Link to="/dashboard" className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Go to Dashboard
-                        </Link>
-                    </>
-                ) : (
-                    <>
-                        <Link to="/login" className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Login
-                        </Link>
-                        <Link to="/register" className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                            Register
-                        </Link>
-                    </>
-                )}
+        <main className="min-h-[calc(100vh-65px)] bg-gray-100 px-4 py-16">
+            <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+                <h1 className="text-4xl font-extrabold text-gray-900">
+                    Welcome to the Home Page
+                </h1>
+
+                <p className="mt-4 text-lg text-gray-600">
+                    A full-stack React + Django app with authentication, dashboard access,
+                    and real-time chat.
+                </p>
+
+                <div className="mt-8 flex flex-wrap justify-center gap-4">
+                    {user ? (
+                        <>
+                            <Link
+                                to="/dashboard"
+                                className="rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+                            >
+                                Go to Dashboard
+                            </Link>
+                            <Link
+                                to="/chat"
+                                className="rounded-md bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-gray-800"
+                            >
+                                Open Chat
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                to="/login"
+                                className="rounded-md bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+                            >
+                                Login
+                            </Link>
+                            <Link
+                                to="/register"
+                                className="rounded-md bg-green-600 px-5 py-3 text-sm font-medium text-white hover:bg-green-700"
+                            >
+                                Register
+                            </Link>
+                        </>
+                    )}
+                </div>
             </div>
-        </div>
+        </main>
     );
 };
 
