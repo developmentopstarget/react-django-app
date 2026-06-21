@@ -92,17 +92,17 @@ const Chat = () => {
     }[readyState];
 
     if (!user) {
-        return <div className="min-h-screen flex items-center justify-center">Please log in to chat.</div>;
+        return <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">Please log in to chat.</div>;
     }
 
     return (
-        <div className="flex h-[calc(100vh-65px)] flex-col bg-gray-100">
-            <div className="p-4 bg-gray-200 text-center">
+        <div className="flex h-[calc(100vh-65px)] flex-col bg-gray-100 dark:bg-gray-900">
+            <div className="p-4 bg-gray-200 text-center text-gray-900 dark:bg-gray-800 dark:text-gray-100">
                 <span>The WebSocket is currently {connectionStatus}</span>
             </div>
 
             {historyError && (
-                <div className="bg-red-50 p-3 text-center text-sm text-red-700">
+                <div className="bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
                     {historyError}
                 </div>
             )}
@@ -110,10 +110,10 @@ const Chat = () => {
             <div className="flex-grow p-6 overflow-auto">
                 <div className="space-y-4">
                     {messages.map((msg, index) => (
-                        <div key={index} className="p-4 bg-white rounded-lg shadow-md">
-                            <p className="text-gray-800">{msg.message}</p>
+                        <div key={index} className="p-4 bg-white rounded-lg shadow-md dark:bg-gray-800">
+                            <p className="text-gray-800 dark:text-gray-100">{msg.message}</p>
                             {formatMessageTime(msg.timestamp) && (
-                                <p className="mt-1 text-xs text-gray-400">
+                                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                                     {formatMessageTime(msg.timestamp)}
                                 </p>
                             )}
@@ -122,13 +122,13 @@ const Chat = () => {
                 </div>
             </div>
 
-            <div className="p-4 bg-white border-t">
+            <div className="p-4 bg-white border-t dark:border-gray-700 dark:bg-gray-800">
                 <form onSubmit={handleSendMessage} className="flex">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="flex-grow px-4 py-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="flex-grow px-4 py-2 border rounded-l-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
                         placeholder="Type a message..."
                         disabled={readyState !== ReadyState.OPEN}
                     />
