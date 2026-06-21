@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,11 +8,11 @@ const API_BASE_URL = (
     'http://127.0.0.1:8000'
 ).replace(/\/$/, '');
 
-const Dashboard = () => {
+export default function Dashboard() {
     const { user } = useAuth();
     const [me, setMe] = useState(null);
-    const [meLoading, setMeLoading] = useState(true);
-    const [meError, setMeError] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -21,17 +22,17 @@ const Dashboard = () => {
             .then((response) => {
                 if (isMounted) {
                     setMe(response.data);
-                    setMeError(null);
+                    setError(null);
                 }
             })
             .catch(() => {
                 if (isMounted) {
-                    setMeError('Failed to load user info.');
+                    setError('Failed to load account details.');
                 }
             })
             .finally(() => {
                 if (isMounted) {
-                    setMeLoading(false);
+                    setLoading(false);
                 }
             });
 
@@ -41,46 +42,96 @@ const Dashboard = () => {
     }, []);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Welcome to your Dashboard, {user ? user.username : 'Guest'}!
-                </h2>
-
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    This is a protected route, only accessible to authenticated users.
-                </p>
-
-                {meLoading && (
-                    <p className="text-center text-sm text-gray-500">
-                        Loading user info...
+        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-5xl space-y-8">
+                <div className="text-center">
+                    <h1 className="text-3xl font-extrabold text-gray-900">
+                        Welcome, {user?.username || 'User'}
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-600">
+                        Your RDA app home for account details, items, and chat.
                     </p>
-                )}
+                </div>
 
-                {meError && (
-                    <p className="text-center text-sm text-red-500">
-                        {meError}
-                    </p>
-                )}
+                <div className="grid gap-6 md:grid-cols-3">
+                    <div className="rounded-lg bg-white p-6 shadow space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Account
+                            </h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Your authenticated profile information.
+                            </p>
+                        </div>
 
-                {me && (
-                    <div className="bg-white shadow rounded-lg p-6 space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                            User info
-                        </h3>
+                        {loading && (
+                            <p className="text-sm text-gray-500">
+                                Loading account details...
+                            </p>
+                        )}
 
-                        <p className="text-sm font-medium text-gray-700">
-                            <span className="text-gray-500">Username:</span> {me.username}
-                        </p>
+                        {error && (
+                            <p className="text-sm text-red-500">
+                                {error}
+                            </p>
+                        )}
 
-                        <p className="text-sm font-medium text-gray-700">
-                            <span className="text-gray-500">Email:</span> {me.email || 'No email set'}
-                        </p>
+                        {me && (
+                            <dl className="space-y-2 text-sm">
+                                <div>
+                                    <dt className="text-gray-500">Username</dt>
+                                    <dd className="font-medium text-gray-900">
+                                        {me.username}
+                                    </dd>
+                                </div>
+
+                                <div>
+                                    <dt className="text-gray-500">Email</dt>
+                                    <dd className="font-medium text-gray-900">
+                                        {me.email || 'No email set'}
+                                    </dd>
+                                </div>
+                            </dl>
+                        )}
                     </div>
-                )}
+
+                    <div className="rounded-lg bg-white p-6 shadow flex flex-col justify-between space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Items
+                            </h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Manage user-owned items with create, edit, and delete actions.
+                            </p>
+                        </div>
+
+                        <Link
+                            to="/items"
+                            className="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                        >
+                            Go to Items
+                        </Link>
+                    </div>
+
+                    <div className="rounded-lg bg-white p-6 shadow flex flex-col justify-between space-y-4">
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Chat
+                            </h2>
+                            <p className="mt-1 text-sm text-gray-500">
+                                Use real-time chat with saved, user-owned message history.
+                            </p>
+                        </div>
+
+                        <Link
+                            to="/chat"
+                            className="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                        >
+                            Go to Chat
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
     );
-};
-
-export default Dashboard;
+}
