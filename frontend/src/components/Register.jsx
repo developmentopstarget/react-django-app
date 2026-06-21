@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { parseAuthErrors, useAuth } from '../context/AuthContext';
 
 const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState([]);
 
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -15,14 +15,14 @@ const Register = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
-        setError('');
+        setErrors([]);
 
-        const success = await register(username, email, password);
+        const result = await register(username, email, password);
 
-        if (success) {
+        if (result.ok) {
             navigate('/dashboard', { replace: true });
         } else {
-            setError('Registration failed. Check your details and try again.');
+            setErrors(parseAuthErrors(result.errors, 'Registration failed. Please check your details and try again.'));
         }
 
         setSubmitting(false);
@@ -44,9 +44,17 @@ const Register = () => {
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    {error && (
+                    {errors.length > 0 && (
                         <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                            {error}
+                            {errors.length === 1 ? (
+                                <p>{errors[0]}</p>
+                            ) : (
+                                <ul className="list-disc list-inside space-y-1">
+                                    {errors.map((message, index) => (
+                                        <li key={index}>{message}</li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     )}
 

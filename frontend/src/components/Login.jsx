@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { parseAuthErrors, useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState([]);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -17,14 +17,14 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
-        setError('');
+        setErrors([]);
 
-        const success = await login(username, password);
+        const result = await login(username, password);
 
-        if (success) {
+        if (result.ok) {
             navigate(redirectTo, { replace: true });
         } else {
-            setError('Invalid username or password.');
+            setErrors(parseAuthErrors(result.errors, 'Invalid username or password.'));
         }
 
         setSubmitting(false);
@@ -46,9 +46,17 @@ const Login = () => {
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                    {error && (
+                    {errors.length > 0 && (
                         <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                            {error}
+                            {errors.length === 1 ? (
+                                <p>{errors[0]}</p>
+                            ) : (
+                                <ul className="list-disc list-inside space-y-1">
+                                    {errors.map((message, index) => (
+                                        <li key={index}>{message}</li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     )}
 
