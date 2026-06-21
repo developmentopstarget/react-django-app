@@ -5,10 +5,15 @@ from .models import Item
 from .serializers import ItemSerializer
 
 class ItemViewSet(viewsets.ModelViewSet):
-    queryset = Item.objects.all().order_by('-id')
     serializer_class = ItemSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name']  # allows ?search=foo
+    search_fields = ["name"]
+
+    def get_queryset(self):
+        return Item.objects.filter(owner=self.request.user).order_by("-id")
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
 
 class MeView(APIView):

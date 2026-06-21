@@ -27,10 +27,10 @@ class ItemViewSetTests(APITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_list_items_returns_200_with_all_items(self):
+    def test_list_items_returns_200_with_own_items(self):
         self.authenticate()
-        Item.objects.create(name="Alpha")
-        Item.objects.create(name="Beta")
+        Item.objects.create(name="Alpha", owner=self.user)
+        Item.objects.create(name="Beta", owner=self.user)
 
         response = self.client.get(self.url)
 
@@ -39,7 +39,7 @@ class ItemViewSetTests(APITestCase):
 
     def test_item_response_fields_shape(self):
         self.authenticate()
-        Item.objects.create(name="Alpha")
+        Item.objects.create(name="Alpha", owner=self.user)
 
         response = self.client.get(self.url)
         item = response.data[0]
@@ -48,6 +48,7 @@ class ItemViewSetTests(APITestCase):
         self.assertEqual(item["name"], "Alpha")
         self.assertIn("id", item)
         self.assertIn("created_at", item)
+        self.assertNotIn("owner", item)
 
     def test_create_item_returns_201(self):
         self.authenticate()
@@ -65,6 +66,37 @@ class ItemViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("name", response.data)
+
+    def test_authenticated_user_sees_only_own_items(self):
+        self.authenticate()
+        other = User.objects.create_user(username="other", password="pass")
+        Item.objects.create(name="Mine", owner=self.user)
+        Item.objects.create(name="Theirs", owner=other)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Mine")
+
+    def test_authenticated_user_does_not_see_other_users_items(self):
+        self.authenticate()
+        other = User.objects.create_user(username="other2", password="pass")
+        Item.objects.create(name="NotMine", owner=other)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_create_item_assigns_owner_to_request_user(self):
+        self.authenticate()
+
+        response = self.client.post(self.url, {"name": "Owned"}, format="json")
+        item = Item.objects.get(name="Owned")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(item.owner, self.user)
 
 class MeViewTests(APITestCase):
     def setUp(self):
