@@ -1,21 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from '../context/AuthContext';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8000').replace(/\/$/, '');
 
 const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    const [historyError, setHistoryError] = useState('');
     const { user } = useAuth();
 
-    const roomName = 'general';
+    const roomName = user ? `user_${user.id}` : null;
     const token = localStorage.getItem('token');
-    const socketUrl = token ? `${WS_BASE_URL}/ws/chat/${roomName}/?token=${token}` : null;
+    const socketUrl = token && roomName ? `${WS_BASE_URL}/ws/chat/${roomName}/?token=${token}` : null;
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
         shouldReconnect: () => true,
     });
+
+    useEffect(() => {
+        if (!user) {
+            setMessages([]);
+            return;
+        }
+
+        axios
+            .get(`${API_BASE_URL}/api/chat/history/`)
+            .then((response) => {
+                setMessages(response.data.map((entry) => entry.message));
+                setHistoryError('');
+            })
+            .catch(() => {
+                setHistoryError('Failed to load chat history.');
+            });
+    }, [user]);
 
     useEffect(() => {
         if (lastMessage !== null) {
@@ -50,6 +70,12 @@ const Chat = () => {
             <div className="p-4 bg-gray-200 text-center">
                 <span>The WebSocket is currently {connectionStatus}</span>
             </div>
+
+            {historyError && (
+                <div className="bg-red-50 p-3 text-center text-sm text-red-700">
+                    {historyError}
+                </div>
+            )}
 
             <div className="flex-grow p-6 overflow-auto">
                 <div className="space-y-4">

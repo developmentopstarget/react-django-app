@@ -1,11 +1,14 @@
 import json
 from urllib.parse import parse_qs
-from channels.generic.websocket import AsyncWebsocketConsumer
+
 from channels.db import database_sync_to_async
-from django.contrib.auth.models import AnonymousUser, User
-from rest_framework.authtoken.models import Token
+from channels.generic.websocket import AsyncWebsocketConsumer
+from django.contrib.auth.models import AnonymousUser
 from openai import AsyncOpenAI
+from rest_framework.authtoken.models import Token
+
 from .models import Message
+
 
 @database_sync_to_async
 def get_user(token_key):
@@ -15,23 +18,17 @@ def get_user(token_key):
     except Token.DoesNotExist:
         return AnonymousUser()
 
-@database_sync_to_async
-def get_user_by_username(username):
-    try:
-        return User.objects.get(username=username)
-    except User.DoesNotExist:
-        return None
 
 @database_sync_to_async
 def save_message(user, room, content):
     Message.objects.create(user=user, room_name=room, content=content)
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
 
-        # Get token from query string
         qs = parse_qs(self.scope.get("query_string", b"").decode())
         token_key = qs.get("token", [None])[0]
 
@@ -45,6 +42,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.close(code=4001)
             return
 
+        expected_room = f"user_{self.scope['user'].id}"
+        if self.room_name != expected_room:
+            await self.close(code=4003)
+            return
+
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
@@ -54,45 +56,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
-        user = self.scope['user']
+        user = self.scope["user"]
 
-        # Save message to database
         await save_message(user, self.room_name, message)
 
-        # Send user message to room group
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat_message", "message": f"{user.username}: {message}"}
+            self.room_group_name,
+            {"type": "chat_message", "message": f"{user.username}: {message}"},
         )
 
-        # Check if message is for AI
         if message.lower().startswith("/ai "):
             user_query = message[4:].strip()
+
             try:
                 client = AsyncOpenAI()
                 response = await client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": user_query}
+                        {"role": "user", "content": user_query},
                     ],
-                    max_tokens=150
+                    max_tokens=150,
                 )
                 ai_response = response.choices[0].message.content.strip()
-                
-                # Save AI response to database
-                ai_user = await get_user_by_username("AI")
-                if ai_user:
-                    await save_message(ai_user, self.room_name, ai_response)
-
             except Exception as e:
                 ai_response = f"Error: {e}"
 
-            # Send AI response to room group
+            ai_message = f"AI: {ai_response}"
+            await save_message(user, self.room_name, ai_message)
+
             await self.channel_layer.group_send(
-                self.room_group_name, {"type": "chat_message", "message": f"AI: {ai_response}"}
+                self.room_group_name,
+                {"type": "chat_message", "message": ai_message},
             )
 
     async def chat_message(self, event):
-        message = event["message"]
-
-        await self.send(text_data=json.dumps({"message": message}))
+        await self.send(text_data=json.dumps({"message": event["message"]}))
