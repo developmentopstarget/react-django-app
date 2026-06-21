@@ -42,30 +42,30 @@ export default function Dashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900">
             <div className="mx-auto max-w-5xl space-y-8">
                 <div className="text-center">
-                    <h1 className="text-3xl font-extrabold text-gray-900">
+                    <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
                         Welcome, {user?.username || 'User'}
                     </h1>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                         Your RDA app home for account details, items, and chat.
                     </p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-3">
-                    <div className="rounded-lg bg-white p-6 shadow space-y-4">
+                    <div className="rounded-lg bg-white p-6 shadow space-y-4 dark:bg-gray-800">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                 Account
                             </h2>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Your authenticated profile information.
                             </p>
                         </div>
 
                         {loading && (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
                                 Loading account details...
                             </p>
                         )}
@@ -79,15 +79,15 @@ export default function Dashboard() {
                         {me && (
                             <dl className="space-y-2 text-sm">
                                 <div>
-                                    <dt className="text-gray-500">Username</dt>
-                                    <dd className="font-medium text-gray-900">
+                                    <dt className="text-gray-500 dark:text-gray-400">Username</dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
                                         {me.username}
                                     </dd>
                                 </div>
 
                                 <div>
-                                    <dt className="text-gray-500">Email</dt>
-                                    <dd className="font-medium text-gray-900">
+                                    <dt className="text-gray-500 dark:text-gray-400">Email</dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
                                         {me.email || 'No email set'}
                                     </dd>
                                 </div>
@@ -95,12 +95,12 @@ export default function Dashboard() {
                         )}
                     </div>
 
-                    <div className="rounded-lg bg-white p-6 shadow flex flex-col justify-between space-y-4">
+                    <div className="rounded-lg bg-white p-6 shadow flex flex-col justify-between space-y-4 dark:bg-gray-800">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                 Items
                             </h2>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Manage user-owned items with create, edit, and delete actions.
                             </p>
                         </div>
@@ -113,12 +113,12 @@ export default function Dashboard() {
                         </Link>
                     </div>
 
-                    <div className="rounded-lg bg-white p-6 shadow flex flex-col justify-between space-y-4">
+                    <div className="rounded-lg bg-white p-6 shadow flex flex-col justify-between space-y-4 dark:bg-gray-800">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900">
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                                 Chat
                             </h2>
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Use real-time chat with saved, user-owned message history.
                             </p>
                         </div>

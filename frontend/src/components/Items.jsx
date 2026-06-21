@@ -135,17 +135,17 @@ export default function Items() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900">
             <div className="mx-auto max-w-md space-y-6">
-                <h2 className="text-center text-3xl font-extrabold text-gray-900">
+                <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                     Items
                 </h2>
 
-                <p className="text-center text-sm text-gray-600">
+                <p className="text-center text-sm text-gray-600 dark:text-gray-300">
                     View and manage your own items.
                 </p>
 
-                <div className="bg-white shadow rounded-lg p-6 space-y-4">
+                <div className="bg-white shadow rounded-lg p-6 space-y-4 dark:bg-gray-800">
                     <form onSubmit={handleCreate} className="flex gap-2">
                         <input
                             type="text"
@@ -153,7 +153,7 @@ export default function Items() {
                             onChange={(event) => setName(event.target.value)}
                             placeholder="New item name"
                             disabled={submitting}
-                            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
                         />
 
                         <button
@@ -171,7 +171,7 @@ export default function Items() {
                 </div>
 
                 {loading && (
-                    <p className="text-center text-sm text-gray-500">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                         Loading items...
                     </p>
                 )}
@@ -189,17 +189,17 @@ export default function Items() {
                 )}
 
                 {!loading && !error && items.length === 0 && (
-                    <p className="text-center text-sm text-gray-500">
+                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                         No items yet. Add one above.
                     </p>
                 )}
 
                 {!loading && !error && items.length > 0 && (
-                    <ul className="bg-white shadow rounded-lg divide-y divide-gray-100">
+                    <ul className="bg-white shadow rounded-lg divide-y divide-gray-100 dark:divide-gray-700 dark:bg-gray-800">
                         {items.map((item) => (
                             <li
                                 key={item.id}
-                                className="px-6 py-3 text-sm text-gray-800"
+                                className="px-6 py-3 text-sm text-gray-800 dark:text-gray-100"
                             >
                                 {editingId === item.id ? (
                                     <div className="space-y-2">
@@ -211,7 +211,7 @@ export default function Items() {
                                                     setEditName(event.target.value)
                                                 }
                                                 disabled={editSubmitting}
-                                                className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
                                             />
 
                                             <button
@@ -229,7 +229,7 @@ export default function Items() {
                                                 type="button"
                                                 onClick={handleEditCancel}
                                                 disabled={editSubmitting}
-                                                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                                             >
                                                 Cancel
                                             </button>
@@ -250,7 +250,7 @@ export default function Items() {
                                                 type="button"
                                                 onClick={() => handleEditStart(item)}
                                                 disabled={deletingId === item.id}
-                                                className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                                className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                                             >
                                                 Edit
                                             </button>
@@ -259,7 +259,7 @@ export default function Items() {
                                                 type="button"
                                                 onClick={() => handleDelete(item.id)}
                                                 disabled={deletingId === item.id}
-                                                className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                                className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
                                             >
                                                 {deletingId === item.id
                                                     ? 'Deleting...'
