@@ -4,6 +4,7 @@ from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
 from api.views import ItemViewSet, MeView
+from chat.views import ChatHistoryView
 
 def health(request):
     return JsonResponse({"status": "ok"})
@@ -16,6 +17,7 @@ urlpatterns = [
     path("api/health/", health),
     path("api/", include(router.urls)),
     path("api/me/", MeView.as_view()),
+    path("api/chat/history/", ChatHistoryView.as_view()),
     # --- auth endpoints ---
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
