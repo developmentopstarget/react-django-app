@@ -39,6 +39,9 @@ const Navbar = () => {
                             <NavLink to="/chat" className={navLinkClass}>
                                 Chat
                             </NavLink>
+                            <NavLink to="/items" className={navLinkClass}>
+                                Items
+                            </NavLink>
 
                             <span className="ml-3 hidden text-sm text-gray-500 sm:inline">
                                 {user.username}
