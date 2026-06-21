@@ -6,6 +6,26 @@ import { useAuth } from '../context/AuthContext';
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8000').replace(/\/$/, '');
 
+const formatMessageTime = (timestamp) => {
+    if (!timestamp) {
+        return '';
+    }
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleString([], {
+        month: 'short',
+        day: 'numeric',
+        ...(date.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}),
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+};
+
 const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -29,7 +49,12 @@ const Chat = () => {
         axios
             .get(`${API_BASE_URL}/api/chat/history/`)
             .then((response) => {
-                setMessages(response.data.map((entry) => entry.message));
+                setMessages(
+                    response.data.map((entry) => ({
+                        message: entry.message,
+                        timestamp: entry.timestamp,
+                    }))
+                );
                 setHistoryError('');
             })
             .catch(() => {
@@ -40,7 +65,12 @@ const Chat = () => {
     useEffect(() => {
         if (lastMessage !== null) {
             const data = JSON.parse(lastMessage.data);
-            setMessages((prev) => prev.concat(data.message));
+            setMessages((prev) =>
+                prev.concat({
+                    message: data.message,
+                    timestamp: data.timestamp || new Date().toISOString(),
+                })
+            );
         }
     }, [lastMessage]);
 
@@ -79,9 +109,14 @@ const Chat = () => {
 
             <div className="flex-grow p-6 overflow-auto">
                 <div className="space-y-4">
-                    {messages.map((message, index) => (
+                    {messages.map((msg, index) => (
                         <div key={index} className="p-4 bg-white rounded-lg shadow-md">
-                            <p className="text-gray-800">{message}</p>
+                            <p className="text-gray-800">{msg.message}</p>
+                            {formatMessageTime(msg.timestamp) && (
+                                <p className="mt-1 text-xs text-gray-400">
+                                    {formatMessageTime(msg.timestamp)}
+                                </p>
+                            )}
                         </div>
                     ))}
                 </div>
