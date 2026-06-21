@@ -9,6 +9,7 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import Chat from './components/Chat';
+import Items from './components/Items';
 
 export default function App() {
     return (
@@ -35,6 +36,15 @@ export default function App() {
                         element={
                             <PrivateRoute>
                                 <Chat />
+                            </PrivateRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/items"
+                        element={
+                            <PrivateRoute>
+                                <Items />
                             </PrivateRoute>
                         }
                     />
