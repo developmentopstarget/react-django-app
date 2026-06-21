@@ -138,12 +138,32 @@ npm run build
 The Docker Compose stack runs Postgres, Redis, Django (Daphne), and a React build
 served by Nginx — all with a single command.
 
+Nginx is the public entrypoint in the Docker stack. It serves the React SPA and
+proxies API and WebSocket traffic to the internal backend service:
+
+- `/api/` → `backend:8000`
+- `/ws/` → `backend:8000`
+
 `db`, `migrate`, and `backend` read environment variables from `backend/.env`.
 The `frontend` service contains the React app compiled into its Nginx image at build
 time; it does not use `backend/.env`.
 
+In local Vite development, the frontend defaults to `http://127.0.0.1:8000` and
+`ws://127.0.0.1:8000`. In a production build, if `VITE_API_BASE_URL` and
+`VITE_WS_BASE_URL` are not provided, the frontend uses the current browser origin
+so Docker/Nginx can proxy `/api/` and `/ws/` correctly.
+
 **Prerequisites:** copy `backend/.env.example` to `backend/.env` and fill in at minimum
 `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `SECRET_KEY`.
+
+For production-style environments, also set:
+
+- `DJANGO_ENV=production`
+- `DEBUG=False`
+- `ALLOWED_HOSTS`
+- `CORS_ALLOWED_ORIGINS`
+- `DATABASE_URL` or `DB_HOST` with DB settings
+- `REDIS_URL`
 
 **Start the stack:**
 ```bash

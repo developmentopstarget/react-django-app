@@ -1,8 +1,6 @@
-const API_BASE = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
-  `${window.location.protocol}//${window.location.hostname}:8000`
-).replace(/\/$/, '');
+import { API_BASE_URL } from './config/runtime';
+
+const API_BASE = API_BASE_URL;
 
 function getCookie(name) {
   const match = document.cookie.match(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`);
