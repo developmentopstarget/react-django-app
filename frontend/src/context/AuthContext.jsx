@@ -6,6 +6,77 @@ const AuthContext = createContext(null);
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 const API_URL = `${API_BASE_URL}/api/auth/`;
 
+const FIELD_LABELS = {
+    username: 'Username',
+    email: 'Email',
+    password: 'Password',
+    non_field_errors: '',
+    detail: '',
+};
+
+function formatFieldName(fieldName) {
+    if (FIELD_LABELS[fieldName] !== undefined) {
+        return FIELD_LABELS[fieldName];
+    }
+
+    return fieldName
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function normalizeMessages(value) {
+    if (!value) {
+        return [];
+    }
+
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (Array.isArray(value)) {
+        return value.flatMap((item) => normalizeMessages(item));
+    }
+
+    if (typeof value === 'object') {
+        return Object.entries(value).flatMap(([key, nestedValue]) => {
+            const messages = normalizeMessages(nestedValue);
+            const label = formatFieldName(key);
+
+            return messages.map((message) =>
+                label ? `${label}: ${message}` : message
+            );
+        });
+    }
+
+    return [String(value)];
+}
+
+export function parseAuthErrors(data, fallbackMessage = 'Something went wrong. Please try again.') {
+    if (!data) {
+        return [fallbackMessage];
+    }
+
+    if (typeof data === 'string' || Array.isArray(data)) {
+        const messages = normalizeMessages(data);
+        return messages.length > 0 ? messages : [fallbackMessage];
+    }
+
+    if (typeof data === 'object') {
+        const messages = Object.entries(data).flatMap(([key, value]) => {
+            const label = formatFieldName(key);
+            const fieldMessages = normalizeMessages(value);
+
+            return fieldMessages.map((message) =>
+                label ? `${label}: ${message}` : message
+            );
+        });
+
+        return messages.length > 0 ? messages : [fallbackMessage];
+    }
+
+    return [fallbackMessage];
+}
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -43,10 +114,13 @@ export const AuthProvider = ({ children }) => {
             const userResponse = await axios.get(`${API_URL}users/me/`);
             setUser(userResponse.data);
 
-            return true;
+            return { ok: true, errors: null };
         } catch (error) {
             console.error('Login failed:', error);
-            return false;
+            return {
+                ok: false,
+                errors: error.response?.data || { detail: 'Invalid username or password.' },
+            };
         }
     };
 
@@ -56,7 +130,10 @@ export const AuthProvider = ({ children }) => {
             return login(username, password);
         } catch (error) {
             console.error('Registration failed:', error);
-            return false;
+            return {
+                ok: false,
+                errors: error.response?.data || { detail: 'Registration failed. Please try again.' },
+            };
         }
     };
 
