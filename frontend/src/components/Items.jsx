@@ -10,9 +10,18 @@ export default function Items() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
     const [name, setName] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [createError, setCreateError] = useState(null);
+
+    const [editingId, setEditingId] = useState(null);
+    const [editName, setEditName] = useState('');
+    const [editSubmitting, setEditSubmitting] = useState(false);
+    const [editError, setEditError] = useState(null);
+
+    const [deletingId, setDeletingId] = useState(null);
+    const [deleteError, setDeleteError] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -64,6 +73,67 @@ export default function Items() {
         }
     }
 
+    function handleEditStart(item) {
+        setEditingId(item.id);
+        setEditName(item.name);
+        setEditError(null);
+        setDeleteError(null);
+    }
+
+    function handleEditCancel() {
+        setEditingId(null);
+        setEditName('');
+        setEditError(null);
+    }
+
+    async function handleEditSave(id) {
+        const trimmed = editName.trim();
+        if (!trimmed) return;
+
+        setEditSubmitting(true);
+        setEditError(null);
+
+        try {
+            const response = await axios.patch(`${API_BASE_URL}/api/items/${id}/`, {
+                name: trimmed,
+            });
+
+            setItems((currentItems) =>
+                currentItems.map((item) =>
+                    item.id === id ? response.data : item
+                )
+            );
+
+            setEditingId(null);
+            setEditName('');
+        } catch {
+            setEditError('Failed to save changes.');
+        } finally {
+            setEditSubmitting(false);
+        }
+    }
+
+    async function handleDelete(id) {
+        setDeletingId(id);
+        setDeleteError(null);
+
+        try {
+            await axios.delete(`${API_BASE_URL}/api/items/${id}/`);
+
+            setItems((currentItems) =>
+                currentItems.filter((item) => item.id !== id)
+            );
+
+            if (editingId === id) {
+                handleEditCancel();
+            }
+        } catch {
+            setDeleteError('Failed to delete item.');
+        } finally {
+            setDeletingId(null);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-md space-y-6">
@@ -72,7 +142,7 @@ export default function Items() {
                 </h2>
 
                 <p className="text-center text-sm text-gray-600">
-                    View and create your own items.
+                    View and manage your own items.
                 </p>
 
                 <div className="bg-white shadow rounded-lg p-6 space-y-4">
@@ -112,6 +182,12 @@ export default function Items() {
                     </p>
                 )}
 
+                {deleteError && (
+                    <p className="text-center text-sm text-red-500">
+                        {deleteError}
+                    </p>
+                )}
+
                 {!loading && !error && items.length === 0 && (
                     <p className="text-center text-sm text-gray-500">
                         No items yet. Add one above.
@@ -125,7 +201,73 @@ export default function Items() {
                                 key={item.id}
                                 className="px-6 py-3 text-sm text-gray-800"
                             >
-                                {item.name}
+                                {editingId === item.id ? (
+                                    <div className="space-y-2">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={editName}
+                                                onChange={(event) =>
+                                                    setEditName(event.target.value)
+                                                }
+                                                disabled={editSubmitting}
+                                                className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            />
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditSave(item.id)}
+                                                disabled={
+                                                    editSubmitting || !editName.trim()
+                                                }
+                                                className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                                            >
+                                                {editSubmitting ? 'Saving...' : 'Save'}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleEditCancel}
+                                                disabled={editSubmitting}
+                                                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+
+                                        {editError && (
+                                            <p className="text-xs text-red-500">
+                                                {editError}
+                                            </p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span>{item.name}</span>
+
+                                        <div className="flex shrink-0 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditStart(item)}
+                                                disabled={deletingId === item.id}
+                                                className="rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                            >
+                                                Edit
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(item.id)}
+                                                disabled={deletingId === item.id}
+                                                className="rounded-md border border-red-300 px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                            >
+                                                {deletingId === item.id
+                                                    ? 'Deleting...'
+                                                    : 'Delete'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </li>
                         ))}
                     </ul>
