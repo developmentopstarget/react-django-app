@@ -23,13 +23,9 @@ class ItemViewSetTests(APITestCase):
     def authenticate(self):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
 
-    def test_unauthenticated_list_is_rejected(self):
+    def test_unauthenticated_get_returns_401(self):
         response = self.client.get(self.url)
-
-        self.assertIn(
-            response.status_code,
-            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
-        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_items_returns_200_with_all_items(self):
         self.authenticate()
