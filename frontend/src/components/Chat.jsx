@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from '../context/AuthContext';
 
-const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8001').replace(/\/$/, '');
+const WS_BASE_URL = (import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8000').replace(/\/$/, '');
 
 const Chat = () => {
     const [messages, setMessages] = useState([]);
