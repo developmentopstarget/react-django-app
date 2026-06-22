@@ -104,6 +104,7 @@ const Navbar = () => {
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const notificationsRef = useRef(null);
+    const mobileMenuRef = useRef(null);
 
     const handleLogout = async () => {
         await logout();
@@ -149,6 +150,29 @@ const Navbar = () => {
     }, [location.pathname]);
 
     useEffect(() => {
+        if (!mobileMenuOpen) {
+            return undefined;
+        }
+
+        const handleClickOutside = (event) => {
+            if (
+                mobileMenuRef.current &&
+                !mobileMenuRef.current.contains(event.target)
+            ) {
+                setMobileMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [mobileMenuOpen]);
+
+    useEffect(() => {
         if (!notificationsOpen) {
             return undefined;
         }
@@ -173,7 +197,7 @@ const Navbar = () => {
 
     return (
         <header className="border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <nav className="mx-auto max-w-6xl px-4 py-3">
+            <nav ref={mobileMenuRef} className="mx-auto max-w-6xl px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                     <Link to="/" className="shrink-0 text-lg font-bold text-gray-900 dark:text-white">
                         React Django App
