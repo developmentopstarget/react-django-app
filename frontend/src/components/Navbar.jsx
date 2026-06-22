@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/runtime';
 import ThemeToggle from './ThemeToggle';
 
 const navLinkClass = ({ isActive }) =>
@@ -46,6 +48,23 @@ function BellIcon({ className = '' }) {
     );
 }
 
+function formatNotificationTime(value) {
+    if (!value) {
+        return '';
+    }
+
+    try {
+        return new Intl.DateTimeFormat(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        }).format(new Date(value));
+    } catch {
+        return '';
+    }
+}
+
 function MenuIcon({ className = '' }) {
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -74,26 +93,6 @@ const searchableRoutes = [
     { label: 'items', path: '/items' },
 ];
 
-const notifications = [
-    {
-        id: 1,
-        title: 'Chat history ready',
-        message: 'Your saved chat messages are available in Chat.',
-        time: 'Now',
-    },
-    {
-        id: 2,
-        title: 'Items workspace active',
-        message: 'Create, edit, and delete your user-owned items.',
-        time: 'Today',
-    },
-    {
-        id: 3,
-        title: 'Dashboard updated',
-        message: 'Account, Items, and Chat cards are ready.',
-        time: 'Today',
-    },
-];
 
 const Navbar = () => {
     const { user, logout } = useAuth();
@@ -103,7 +102,11 @@ const Navbar = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [notifications, setNotifications] = useState([]);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    const [notificationsError, setNotificationsError] = useState('');
     const notificationsRef = useRef(null);
+    const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
     const handleLogout = async () => {
         await logout();
@@ -142,6 +145,126 @@ const Navbar = () => {
             setNotificationsOpen(false);
         }
     };
+
+    const markAllNotificationsRead = async () => {
+        if (!user || unreadCount === 0) {
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            return;
+        }
+
+        try {
+            await axios.post(
+                `${API_BASE_URL}/api/notifications/mark-all-read/`,
+                {},
+                { headers: { Authorization: `Token ${token}` } }
+            );
+
+            setNotifications((currentNotifications) =>
+                currentNotifications.map((notification) => ({
+                    ...notification,
+                    is_read: true,
+                }))
+            );
+        } catch (error) {
+            console.error('Failed to mark notifications as read:', error);
+        }
+    };
+
+    const handleNotificationToggle = () => {
+        setNotificationsOpen((open) => {
+            const nextOpen = !open;
+
+            if (nextOpen) {
+                void markAllNotificationsRead();
+            }
+
+            return nextOpen;
+        });
+        setMobileMenuOpen(false);
+    };
+
+    const handleNotificationClick = async (notification) => {
+        const token = localStorage.getItem('token');
+
+        if (!notification.is_read && token) {
+            try {
+                await axios.post(
+                    `${API_BASE_URL}/api/notifications/${notification.id}/mark-read/`,
+                    {},
+                    { headers: { Authorization: `Token ${token}` } }
+                );
+
+                setNotifications((currentNotifications) =>
+                    currentNotifications.map((currentNotification) =>
+                        currentNotification.id === notification.id
+                            ? { ...currentNotification, is_read: true }
+                            : currentNotification
+                    )
+                );
+            } catch (error) {
+                console.error('Failed to mark notification as read:', error);
+            }
+        }
+
+        setNotificationsOpen(false);
+
+        if (notification.link) {
+            navigate(notification.link);
+        }
+    };
+
+    useEffect(() => {
+        if (!user) {
+            setNotifications([]);
+            setNotificationsOpen(false);
+            return undefined;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setNotifications([]);
+            return undefined;
+        }
+
+        let ignore = false;
+
+        const loadNotifications = () => {
+            setNotificationsLoading(true);
+            setNotificationsError('');
+
+            axios.get(`${API_BASE_URL}/api/notifications/`, {
+                headers: { Authorization: `Token ${token}` },
+            })
+                .then((response) => {
+                    if (!ignore) {
+                        setNotifications(response.data);
+                    }
+                })
+                .catch((error) => {
+                    if (!ignore) {
+                        console.error('Failed to load notifications:', error);
+                        setNotificationsError('Could not load notifications.');
+                    }
+                })
+                .finally(() => {
+                    if (!ignore) {
+                        setNotificationsLoading(false);
+                    }
+                });
+        };
+
+        loadNotifications();
+        window.addEventListener('rda:notifications-changed', loadNotifications);
+
+        return () => {
+            ignore = true;
+            window.removeEventListener('rda:notifications-changed', loadNotifications);
+        };
+    }, [user]);
 
     useEffect(() => {
         setNotificationsOpen(false);
@@ -267,19 +390,18 @@ const Navbar = () => {
                                 <div ref={notificationsRef} className="relative">
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            setNotificationsOpen((open) => !open);
-                                            setMobileMenuOpen(false);
-                                        }}
+                                        onClick={handleNotificationToggle}
                                         onKeyDown={handleNotificationKeyDown}
                                         aria-label={notificationsOpen ? 'Close notifications' : 'Open notifications'}
                                         aria-expanded={notificationsOpen}
                                         className="relative rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                                     >
                                         <BellIcon className="h-5 w-5" />
-                                        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white">
-                                            {notifications.length}
-                                        </span>
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white">
+                                                {unreadCount}
+                                            </span>
+                                        )}
                                     </button>
 
                                     {notificationsOpen && (
@@ -290,36 +412,64 @@ const Navbar = () => {
                                                         Notifications
                                                     </h3>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        Static demo messages
+                                                        {notificationsLoading
+                                                            ? 'Loading...'
+                                                            : notificationsError || 'Backend notifications'}
                                                     </p>
                                                 </div>
                                                 <span className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
-                                                    {notifications.length} new
+                                                    {unreadCount > 0 ? `${unreadCount} unread` : 'All read'}
                                                 </span>
                                             </div>
 
                                             <div className="max-h-80 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
-                                                {notifications.map((notification) => (
-                                                    <div key={notification.id} className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/60">
-                                                        <div className="flex items-start justify-between gap-3">
-                                                            <div>
-                                                                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                    {notification.title}
-                                                                </p>
-                                                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                                                    {notification.message}
-                                                                </p>
-                                                            </div>
-                                                            <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                                                                {notification.time}
-                                                            </span>
-                                                        </div>
+                                                {notificationsLoading ? (
+                                                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+                                                        Loading notifications...
                                                     </div>
-                                                ))}
+                                                ) : notificationsError ? (
+                                                    <div className="px-4 py-6 text-sm text-red-600 dark:text-red-400">
+                                                        {notificationsError}
+                                                    </div>
+                                                ) : notifications.length > 0 ? (
+                                                    notifications.map((notification) => (
+                                                        <button
+                                                            key={notification.id}
+                                                            type="button"
+                                                            onClick={() => handleNotificationClick(notification)}
+                                                            className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-3">
+                                                                <div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                            {notification.title}
+                                                                        </p>
+                                                                        {!notification.is_read && (
+                                                                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-700 dark:bg-red-900 dark:text-red-200">
+                                                                                New
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                                                        {notification.message}
+                                                                    </p>
+                                                                </div>
+                                                                <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
+                                                                    {formatNotificationTime(notification.created_at)}
+                                                                </span>
+                                                            </div>
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+                                                        No notifications yet.
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="bg-gray-50 px-4 py-3 text-xs text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-                                                Real notifications can be connected in a later backend/API PR.
+                                                Notifications are generated by backend app events.
                                             </div>
                                         </div>
                                     )}
