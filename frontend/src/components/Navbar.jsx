@@ -172,7 +172,17 @@ const Navbar = () => {
     }, [notificationsOpen]);
 
     return (
-        <header className="border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <>
+            {mobileMenuOpen && (
+                <button
+                    type="button"
+                    aria-label="Close mobile menu backdrop"
+                    className="fixed inset-0 z-40 cursor-default bg-transparent md:hidden"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
+            <header className="relative z-50 border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <nav className="mx-auto max-w-6xl px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                     <Link to="/" className="shrink-0 text-lg font-bold text-gray-900 dark:text-white">
@@ -390,6 +400,7 @@ const Navbar = () => {
                 )}
             </nav>
         </header>
+        </>
     );
 };
 
