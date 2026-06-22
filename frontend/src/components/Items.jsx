@@ -132,8 +132,8 @@ export default function Items() {
     }
 
     return (
-        <div className="min-h-[100dvh] overflow-x-hidden bg-gray-100 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-900">
-            <div className="mx-auto max-w-md space-y-6">
+        <div className="min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-gray-100 px-4 py-10 sm:px-6 sm:py-12 lg:px-8 dark:bg-gray-900">
+            <div className="mx-auto w-full max-w-md space-y-6">
                 <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                     Items
                 </h2>
@@ -142,7 +142,7 @@ export default function Items() {
                     View and manage your own items.
                 </p>
 
-                <div className="bg-white shadow rounded-lg p-6 space-y-4 dark:bg-gray-800">
+                <div className="w-full max-w-full rounded-lg bg-white p-4 shadow sm:p-6 dark:bg-gray-800">
                     <form onSubmit={handleCreate} className="flex flex-col gap-2 sm:flex-row">
                         <input
                             type="text"
@@ -150,7 +150,7 @@ export default function Items() {
                             onChange={(event) => setName(event.target.value)}
                             placeholder="New item name"
                             disabled={submitting}
-                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-base sm:text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
+                            className="w-full min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-base sm:text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
                         />
 
                         <button
@@ -192,11 +192,11 @@ export default function Items() {
                 )}
 
                 {!loading && !error && items.length > 0 && (
-                    <ul className="bg-white shadow rounded-lg divide-y divide-gray-100 dark:divide-gray-700 dark:bg-gray-800">
+                    <ul className="w-full max-w-full overflow-hidden rounded-lg bg-white shadow divide-y divide-gray-100 dark:divide-gray-700 dark:bg-gray-800">
                         {items.map((item) => (
                             <li
                                 key={item.id}
-                                className="px-6 py-3 text-base sm:text-sm text-gray-800 dark:text-gray-100"
+                                className="px-4 py-4 text-base sm:px-6 sm:py-3 sm:text-sm text-gray-800 dark:text-gray-100"
                             >
                                 {editingId === item.id ? (
                                     <div className="space-y-2">
@@ -240,9 +240,9 @@ export default function Items() {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                        <span>{item.name}</span>
+                                        <span className="min-w-0 break-words">{item.name}</span>
 
-                                        <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+                                        <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0">
                                             <button
                                                 type="button"
                                                 onClick={() => handleEditStart(item)}
