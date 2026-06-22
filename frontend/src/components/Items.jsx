@@ -132,7 +132,7 @@ export default function Items() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900">
+        <div className="min-h-[100dvh] overflow-x-hidden bg-gray-100 px-4 py-12 sm:px-6 lg:px-8 dark:bg-gray-900">
             <div className="mx-auto max-w-md space-y-6">
                 <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
                     Items
@@ -143,7 +143,7 @@ export default function Items() {
                 </p>
 
                 <div className="bg-white shadow rounded-lg p-6 space-y-4 dark:bg-gray-800">
-                    <form onSubmit={handleCreate} className="flex gap-2">
+                    <form onSubmit={handleCreate} className="flex flex-col gap-2 sm:flex-row">
                         <input
                             type="text"
                             value={name}
@@ -200,7 +200,7 @@ export default function Items() {
                             >
                                 {editingId === item.id ? (
                                     <div className="space-y-2">
-                                        <div className="flex gap-2">
+                                        <div className="flex flex-col gap-2 sm:flex-row">
                                             <input
                                                 type="text"
                                                 value={editName}
@@ -239,10 +239,10 @@ export default function Items() {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="flex items-center justify-between gap-3">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <span>{item.name}</span>
 
-                                        <div className="flex shrink-0 gap-2">
+                                        <div className="flex w-full shrink-0 gap-2 sm:w-auto">
                                             <button
                                                 type="button"
                                                 onClick={() => handleEditStart(item)}
