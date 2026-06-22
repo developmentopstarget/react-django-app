@@ -38,7 +38,7 @@ export default function Dashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900">
+        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gray-100 py-12 px-4 sm:px-6 lg:px-8 dark:bg-gray-900">
             <div className="mx-auto max-w-5xl space-y-8">
                 <div className="text-center">
                     <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
