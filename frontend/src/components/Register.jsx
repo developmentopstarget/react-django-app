@@ -94,14 +94,14 @@ const Register = () => {
                         Create account
                     </h2>
 
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-2 text-base sm:text-sm text-gray-600 dark:text-gray-400">
                         Start using your RDA workspace
                     </p>
                 </div>
 
                 <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
                     {errors.length > 0 && (
-                        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                        <div className="rounded-lg bg-red-50 p-3 text-base sm:text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
                             {errors.length === 1 ? (
                                 <p>{errors[0]}</p>
                             ) : (
@@ -117,7 +117,7 @@ const Register = () => {
                     <div className="space-y-1">
                         <label
                             htmlFor="username"
-                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            className="block text-base sm:text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Username
                         </label>
@@ -131,7 +131,7 @@ const Register = () => {
                                 type="text"
                                 autoComplete="username"
                                 required
-                                className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                                className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
                                 placeholder="Choose a username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -143,7 +143,7 @@ const Register = () => {
                     <div className="space-y-1">
                         <label
                             htmlFor="email"
-                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            className="block text-base sm:text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Email
                         </label>
@@ -157,7 +157,7 @@ const Register = () => {
                                 type="email"
                                 autoComplete="email"
                                 required
-                                className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                                className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
                                 placeholder="you@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -169,7 +169,7 @@ const Register = () => {
                     <div className="space-y-1">
                         <label
                             htmlFor="password"
-                            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            className="block text-base sm:text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Password
                         </label>
@@ -183,7 +183,7 @@ const Register = () => {
                                 type="password"
                                 autoComplete="new-password"
                                 required
-                                className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                                className="block w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-base sm:text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
                                 placeholder="Create a password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -195,13 +195,13 @@ const Register = () => {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-gray-800"
+                        className="w-full rounded-lg bg-indigo-600 py-2.5 text-base sm:text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-gray-800"
                     >
                         {submitting ? 'Creating account...' : 'Create account'}
                     </button>
                 </form>
 
-                <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-6 text-center text-base sm:text-sm text-gray-500 dark:text-gray-400">
                     Already have an account?{' '}
                     <Link
                         to="/login"

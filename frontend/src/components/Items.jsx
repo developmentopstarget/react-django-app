@@ -138,7 +138,7 @@ export default function Items() {
                     Items
                 </h2>
 
-                <p className="text-center text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-center text-base sm:text-sm text-gray-600 dark:text-gray-300">
                     View and manage your own items.
                 </p>
 
@@ -150,13 +150,13 @@ export default function Items() {
                             onChange={(event) => setName(event.target.value)}
                             placeholder="New item name"
                             disabled={submitting}
-                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
+                            className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-base sm:text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
                         />
 
                         <button
                             type="submit"
                             disabled={submitting || !name.trim()}
-                            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                            className="rounded-md bg-indigo-600 px-4 py-2 text-base sm:text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                         >
                             {submitting ? 'Adding...' : 'Add'}
                         </button>
@@ -168,25 +168,25 @@ export default function Items() {
                 </div>
 
                 {loading && (
-                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-center text-base sm:text-sm text-gray-500 dark:text-gray-400">
                         Loading items...
                     </p>
                 )}
 
                 {error && (
-                    <p className="text-center text-sm text-red-500">
+                    <p className="text-center text-base sm:text-sm text-red-500">
                         {error}
                     </p>
                 )}
 
                 {deleteError && (
-                    <p className="text-center text-sm text-red-500">
+                    <p className="text-center text-base sm:text-sm text-red-500">
                         {deleteError}
                     </p>
                 )}
 
                 {!loading && !error && items.length === 0 && (
-                    <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-center text-base sm:text-sm text-gray-500 dark:text-gray-400">
                         No items yet. Add one above.
                     </p>
                 )}
@@ -196,7 +196,7 @@ export default function Items() {
                         {items.map((item) => (
                             <li
                                 key={item.id}
-                                className="px-6 py-3 text-sm text-gray-800 dark:text-gray-100"
+                                className="px-6 py-3 text-base sm:text-sm text-gray-800 dark:text-gray-100"
                             >
                                 {editingId === item.id ? (
                                     <div className="space-y-2">
@@ -208,7 +208,7 @@ export default function Items() {
                                                     setEditName(event.target.value)
                                                 }
                                                 disabled={editSubmitting}
-                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
+                                                className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-base sm:text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white"
                                             />
 
                                             <button
@@ -217,7 +217,7 @@ export default function Items() {
                                                 disabled={
                                                     editSubmitting || !editName.trim()
                                                 }
-                                                className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                                                className="rounded-md bg-indigo-600 px-3 py-1.5 text-base sm:text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                                             >
                                                 {editSubmitting ? 'Saving...' : 'Save'}
                                             </button>
@@ -226,7 +226,7 @@ export default function Items() {
                                                 type="button"
                                                 onClick={handleEditCancel}
                                                 disabled={editSubmitting}
-                                                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                                                className="rounded-md border border-gray-300 px-3 py-1.5 text-base sm:text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                                             >
                                                 Cancel
                                             </button>
