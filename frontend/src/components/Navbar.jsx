@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle';
 
 const navLinkClass = ({ isActive }) =>
     [
-        'rounded-md px-3 py-2 text-sm font-medium transition',
+        'rounded-md px-3 py-2 text-base sm:text-sm font-medium transition',
         isActive
             ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200'
             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white',
@@ -15,7 +15,7 @@ const navLinkClass = ({ isActive }) =>
 
 const mobileNavLinkClass = ({ isActive }) =>
     [
-        'block rounded-lg px-3 py-2 text-sm font-medium transition',
+        'block rounded-lg px-3 py-2 text-base sm:text-sm font-medium transition',
         isActive
             ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200'
             : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white',
@@ -306,13 +306,13 @@ const Navbar = () => {
             )}
 
             <header className="relative z-50 border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <nav className="mx-auto max-w-6xl px-4 py-3">
-                <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
-                    <Link to="/" className="min-w-0 flex-1 truncate text-base font-bold text-gray-900 sm:flex-none sm:text-lg dark:text-white">
+            <nav className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-4">
+                <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:gap-3">
+                    <Link to="/" className="min-w-0 max-w-[44vw] truncate text-base font-bold text-gray-900 sm:max-w-none sm:flex-none sm:text-lg dark:text-white">
                         React Django App
                     </Link>
 
-                    <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                    <div className="flex min-w-fit shrink-0 items-center gap-1 sm:gap-2">
                         {searchOpen ? (
                             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
                                 <span className="pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">
@@ -326,7 +326,7 @@ const Navbar = () => {
                                     onKeyDown={handleSearchKeyDown}
                                     autoFocus
                                     placeholder="Search..."
-                                    className="w-40 rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-10 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:w-48 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                                    className="w-32 rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-10 text-base sm:text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:w-48 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
                                 />
 
                                 <button
@@ -346,7 +346,7 @@ const Navbar = () => {
                                     setNotificationsOpen(false);
                                 }}
                                 aria-label="Open search"
-                                className="rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                                className="rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 sm:p-2 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                             >
                                 <SearchIcon className="h-4 w-4" />
                             </button>
@@ -383,7 +383,7 @@ const Navbar = () => {
 
                         {user && (
                             <>
-                                <span className="hidden text-sm text-gray-500 lg:inline dark:text-gray-400">
+                                <span className="hidden text-base sm:text-sm text-gray-500 lg:inline dark:text-gray-400">
                                     {user.username}
                                 </span>
 
@@ -394,7 +394,7 @@ const Navbar = () => {
                                         onKeyDown={handleNotificationKeyDown}
                                         aria-label={notificationsOpen ? 'Close notifications' : 'Open notifications'}
                                         aria-expanded={notificationsOpen}
-                                        className="relative rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                                        className="relative rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 sm:p-2 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                                     >
                                         <BellIcon className="h-5 w-5" />
                                         {unreadCount > 0 && (
@@ -405,7 +405,7 @@ const Navbar = () => {
                                     </button>
 
                                     {notificationsOpen && (
-                                        <div className="fixed inset-x-3 top-20 z-50 max-h-[70vh] w-auto max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80 sm:max-w-sm dark:border-gray-700 dark:bg-gray-800">
+                                        <div className="fixed left-3 right-3 top-20 z-50 max-h-[70dvh] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80 sm:max-w-sm dark:border-gray-700 dark:bg-gray-800">
                                             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
                                                 <div>
                                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -424,11 +424,11 @@ const Navbar = () => {
 
                                             <div className="max-h-80 divide-y divide-gray-100 overflow-y-auto dark:divide-gray-700">
                                                 {notificationsLoading ? (
-                                                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="px-4 py-6 text-base sm:text-sm text-gray-500 dark:text-gray-400">
                                                         Loading notifications...
                                                     </div>
                                                 ) : notificationsError ? (
-                                                    <div className="px-4 py-6 text-sm text-red-600 dark:text-red-400">
+                                                    <div className="px-4 py-6 text-base sm:text-sm text-red-600 dark:text-red-400">
                                                         {notificationsError}
                                                     </div>
                                                 ) : notifications.length > 0 ? (
@@ -451,7 +451,7 @@ const Navbar = () => {
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                                                    <p className="mt-1 text-base sm:text-sm text-gray-600 dark:text-gray-300">
                                                                         {notification.message}
                                                                     </p>
                                                                 </div>
@@ -462,7 +462,7 @@ const Navbar = () => {
                                                         </button>
                                                     ))
                                                 ) : (
-                                                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="px-4 py-6 text-base sm:text-sm text-gray-500 dark:text-gray-400">
                                                         No notifications yet.
                                                     </div>
                                                 )}
@@ -478,7 +478,7 @@ const Navbar = () => {
                                 <button
                                     type="button"
                                     onClick={handleLogout}
-                                    className="hidden rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 md:inline-flex"
+                                    className="hidden rounded-md bg-red-600 px-3 py-2 text-base sm:text-sm font-medium text-white hover:bg-red-700 md:inline-flex"
                                 >
                                     Logout
                                 </button>
@@ -495,7 +495,7 @@ const Navbar = () => {
                             }}
                             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
                             aria-expanded={mobileMenuOpen}
-                            className="rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 md:hidden dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                            className="rounded-md p-1.5 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 sm:p-2 md:hidden dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                         >
                             {mobileMenuOpen ? (
                                 <CloseIcon className="h-5 w-5" />
@@ -524,14 +524,14 @@ const Navbar = () => {
                                     Items
                                 </NavLink>
 
-                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/40 dark:text-gray-300">
+                                <div className="rounded-lg bg-gray-50 px-3 py-2 text-base sm:text-sm text-gray-600 dark:bg-gray-900/40 dark:text-gray-300">
                                     Signed in as <span className="font-semibold">{user.username}</span>
                                 </div>
 
                                 <button
                                     type="button"
                                     onClick={handleLogout}
-                                    className="w-full rounded-lg bg-red-600 px-3 py-2 text-left text-sm font-medium text-white hover:bg-red-700"
+                                    className="w-full rounded-lg bg-red-600 px-3 py-2 text-left text-base sm:text-sm font-medium text-white hover:bg-red-700"
                                 >
                                     Logout
                                 </button>

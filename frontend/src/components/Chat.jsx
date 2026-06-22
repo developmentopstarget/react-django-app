@@ -101,7 +101,7 @@ const Chat = () => {
             </div>
 
             {historyError && (
-                <div className="bg-red-50 p-3 text-center text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                <div className="bg-red-50 p-3 text-center text-base sm:text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
                     {historyError}
                 </div>
             )}
