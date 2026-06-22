@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
-from api.views import ItemViewSet, MeView
+from api.views import ItemViewSet, MeView, NotificationViewSet
 from chat.views import ChatHistoryView
 
 def health(request):
@@ -11,6 +11,7 @@ def health(request):
 
 router = DefaultRouter()
 router.register(r"items", ItemViewSet, basename="item")
+router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

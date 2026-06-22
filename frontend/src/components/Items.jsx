@@ -62,6 +62,7 @@ export default function Items() {
 
             setItems((currentItems) => [response.data, ...currentItems]);
             setName('');
+            window.dispatchEvent(new CustomEvent('rda:notifications-changed'));
         } catch {
             setCreateError('Failed to create item.');
         } finally {
