@@ -91,7 +91,7 @@ const Chat = () => {
     }[readyState];
 
     if (!user) {
-        return <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">Please log in to chat.</div>;
+        return <div className="min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">Please log in to chat.</div>;
     }
 
     return (

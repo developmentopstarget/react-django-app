@@ -305,8 +305,8 @@ const Navbar = () => {
                 />
             )}
 
-            <header className="relative z-50 border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-            <nav className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-4">
+            <header className="relative z-50 w-full max-w-full overflow-x-hidden border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <nav className="mx-auto w-full max-w-6xl overflow-x-hidden px-3 py-3 sm:px-4">
                 <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:gap-3">
                     <Link to="/" className="min-w-0 max-w-[44vw] truncate text-base font-bold text-gray-900 sm:max-w-none sm:flex-none sm:text-lg dark:text-white">
                         React Django App
@@ -405,7 +405,7 @@ const Navbar = () => {
                                     </button>
 
                                     {notificationsOpen && (
-                                        <div className="fixed left-3 right-3 top-20 z-50 max-h-[70dvh] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80 sm:max-w-sm dark:border-gray-700 dark:bg-gray-800">
+                                        <div className="fixed left-3 right-3 top-20 z-50 max-h-[70dvh] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80 sm:max-w-sm dark:border-gray-700 dark:bg-gray-800">
                                             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
                                                 <div>
                                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -507,7 +507,7 @@ const Navbar = () => {
                 </div>
 
                 {mobileMenuOpen && (
-                    <div className="mt-3 space-y-2 border-t border-gray-200 pt-3 md:hidden dark:border-gray-700">
+                    <div className="mt-3 w-full max-w-full space-y-2 overflow-x-hidden border-t border-gray-200 pt-3 md:hidden dark:border-gray-700">
                         <NavLink to="/" end className={mobileNavLinkClass}>
                             Home
                         </NavLink>

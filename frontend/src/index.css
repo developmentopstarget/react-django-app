@@ -29,3 +29,45 @@ textarea {
   font-size: 16px;
 }
 
+/* Safari/iOS mobile width guardrails */
+:root,
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+  touch-action: pan-y;
+}
+
+#root {
+  isolation: isolate;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+input,
+button,
+textarea,
+select {
+  max-width: 100%;
+}
+
+@supports (width: 100dvw) {
+  html,
+  body,
+  #root {
+    max-width: 100dvw;
+  }
+}
+
