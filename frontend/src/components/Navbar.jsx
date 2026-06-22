@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
@@ -74,6 +74,7 @@ const Navbar = () => {
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const notificationsRef = useRef(null);
 
     const handleLogout = async () => {
         await logout();
@@ -111,6 +112,29 @@ const Navbar = () => {
             setNotificationsOpen(false);
         }
     };
+
+    useEffect(() => {
+        if (!notificationsOpen) {
+            return undefined;
+        }
+
+        const handleClickOutside = (event) => {
+            if (
+                notificationsRef.current &&
+                !notificationsRef.current.contains(event.target)
+            ) {
+                setNotificationsOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
+    }, [notificationsOpen]);
 
     return (
         <header className="border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -175,7 +199,7 @@ const Navbar = () => {
                                 {user.username}
                             </span>
 
-                            <div className="relative">
+                            <div ref={notificationsRef} className="relative">
                                 <button
                                     type="button"
                                     onClick={() => setNotificationsOpen((open) => !open)}
