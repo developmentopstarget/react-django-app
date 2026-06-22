@@ -30,7 +30,8 @@ A modern full-stack web application featuring user authentication, real-time cha
 *   python-dotenv
 
 **Database:**
-*   SQLite (default, easily configurable for PostgreSQL)
+*   SQLite for local development
+*   PostgreSQL for Docker and Render production deployments
 
 ## Getting Started
 
@@ -84,22 +85,17 @@ python3 manage.py createsuperuser
 ```
 Follow the prompts to create your admin user.
 
-**Start the Backend Servers:**
-This project requires two backend servers to run simultaneously:
-*   **Daphne:** For WebSocket connections (real-time chat).
-*   **Django Development Server:** For the admin panel and other standard HTTP requests.
+**Start the Backend Server:**
+For local development, run the backend on port `8000`:
 
-In one terminal, start the **Daphne server** on port 8001:
-```bash
-daphne -b 0.0.0.0 -p 8001 config.asgi:application
-```
-Keep this terminal running.
+~~~bash
+python3 manage.py runserver 127.0.0.1:8000
+~~~
 
-In a **new terminal**, start the **Django development server** on port 8000:
-```bash
-python3 manage.py runserver 0.0.0.0:8000
-```
-Keep this terminal running.
+Keep this terminal running. The local React frontend defaults to:
+
+- API: `http://127.0.0.1:8000`
+- WebSocket: `ws://127.0.0.1:8000`
 
 ### 3. Frontend Setup (React)
 
@@ -109,14 +105,24 @@ cd ../frontend
 ```
 
 **Install Node.js Dependencies:**
-```bash
+~~~bash
 npm install
-```
+~~~
+
+**Optional local frontend environment:**
+Create `frontend/.env` only if you need to override the local defaults:
+
+~~~env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_WS_BASE_URL=ws://127.0.0.1:8000
+~~~
+
+Do not commit local `.env` files.
 
 **Start the React Development Server:**
-```bash
+~~~bash
 npm run dev
-```
+~~~
 Keep this terminal running.
 
 ### 4. Running Tests
@@ -183,6 +189,96 @@ docker compose --env-file backend/.env down
 curl -I http://localhost           # Nginx returns 200
 curl http://localhost/api/items/   # returns 401 unless authenticated
 ```
+
+## Render Deployment
+
+The current live deployment uses Render:
+
+| Service | Render type | Name | URL |
+|---|---|---|---|
+| Backend | Web Service / Docker | `rda-backend` | `https://rda-backend-62d0.onrender.com` |
+| Frontend | Static Site | `rda-frontend` | `https://rda-frontend-zmln.onrender.com` |
+| Database | PostgreSQL | `rda-postgres` | internal Render database URL |
+| Redis | Key Value / Redis | `rda-redis` | internal Render Redis URL |
+
+### Backend Render service
+
+The backend is deployed as a Docker Web Service using:
+
+- Dockerfile: `backend/Dockerfile`
+- Entrypoint: `backend/entrypoint.sh`
+- Runtime command handled by the entrypoint:
+  - runs migrations with `python manage.py migrate --noinput`
+  - starts Daphne with `daphne -b 0.0.0.0 -p "${PORT:-8000}" config.asgi:application`
+
+Required backend environment variables:
+
+~~~env
+DJANGO_ENV=production
+DEBUG=False
+SECRET_KEY=<render-secret-key>
+ALLOWED_HOSTS=rda-backend-62d0.onrender.com
+CORS_ALLOWED_ORIGINS=https://rda-frontend-zmln.onrender.com
+DATABASE_URL=<render-postgres-url>
+REDIS_URL=<render-redis-url>
+OPENAI_API_KEY=<optional-openai-api-key>
+~~~
+
+Do not commit production secrets to Git.
+
+### Frontend Render static site
+
+The frontend is deployed as a Render Static Site from the `frontend/` app.
+
+If the Render root directory is set to `frontend`, use:
+
+~~~bash
+npm ci
+npm run build
+~~~
+
+Publish directory:
+
+~~~text
+dist
+~~~
+
+Frontend environment variables:
+
+~~~env
+VITE_API_BASE_URL=https://rda-backend-62d0.onrender.com
+VITE_WS_BASE_URL=wss://rda-backend-62d0.onrender.com
+~~~
+
+### Post-deploy verification
+
+Backend health check:
+
+~~~bash
+curl https://rda-backend-62d0.onrender.com/api/health/
+~~~
+
+Expected response:
+
+~~~json
+{"status":"ok"}
+~~~
+
+Frontend checks:
+
+1. Open `https://rda-frontend-zmln.onrender.com`.
+2. Register a test user.
+3. Log in.
+4. Open Dashboard.
+5. Open Items and create an item.
+6. Open Chat and confirm the WebSocket connects.
+7. Test dark/light mode.
+8. Test notification dropdown.
+9. On mobile width, open the hamburger menu and tap outside it to confirm it closes.
+
+### Local DNS/VPN note
+
+If local browser or `curl` cannot reach Render while the app works from another network, check VPN, Tailscale exit node, and DNS settings. The local machine may be routing Render traffic through a tunnel or resolving the hostname incorrectly. Render can still be healthy even if the local Mac temporarily cannot reach it.
 
 ## CI / GitHub Actions
 
