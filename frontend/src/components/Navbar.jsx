@@ -307,12 +307,12 @@ const Navbar = () => {
 
             <header className="relative z-50 border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <nav className="mx-auto max-w-6xl px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                    <Link to="/" className="shrink-0 text-lg font-bold text-gray-900 dark:text-white">
+                <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
+                    <Link to="/" className="min-w-0 flex-1 truncate text-base font-bold text-gray-900 sm:flex-none sm:text-lg dark:text-white">
                         React Django App
                     </Link>
 
-                    <div className="flex min-w-0 items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-1 sm:gap-2">
                         {searchOpen ? (
                             <form onSubmit={handleSearchSubmit} className="relative flex items-center">
                                 <span className="pointer-events-none absolute left-3 text-gray-400 dark:text-gray-500">
@@ -405,7 +405,7 @@ const Navbar = () => {
                                     </button>
 
                                     {notificationsOpen && (
-                                        <div className="absolute right-0 top-11 z-50 w-72 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:w-80 dark:border-gray-700 dark:bg-gray-800">
+                                        <div className="fixed inset-x-3 top-20 z-50 max-h-[70vh] w-auto max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:absolute sm:left-auto sm:right-0 sm:top-11 sm:w-80 sm:max-w-sm dark:border-gray-700 dark:bg-gray-800">
                                             <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
                                                 <div>
                                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
