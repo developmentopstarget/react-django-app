@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
 
@@ -71,6 +71,7 @@ const notifications = [
 const Navbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -112,6 +113,10 @@ const Navbar = () => {
             setNotificationsOpen(false);
         }
     };
+
+    useEffect(() => {
+        setNotificationsOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         if (!notificationsOpen) {
