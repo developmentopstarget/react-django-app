@@ -98,9 +98,13 @@ const Navbar = () => {
     const [notifications, setNotifications] = useState([]);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [notificationsError, setNotificationsError] = useState('');
+
+    const searchButtonRef = useRef(null);
+    const searchPanelRef = useRef(null);
+    const searchInputRef = useRef(null);
     const notificationsRef = useRef(null);
     const avatarRef = useRef(null);
-    const searchInputRef = useRef(null);
+
     const unreadCount = notifications.filter((n) => !n.is_read).length;
 
     const handleLogout = async () => {
@@ -128,9 +132,7 @@ const Navbar = () => {
         }
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (suggestions.length > 0) {
-                handleSuggestionClick(suggestions[0].path);
-            }
+            if (suggestions.length > 0) handleSuggestionClick(suggestions[0].path);
         }
     };
 
@@ -186,6 +188,7 @@ const Navbar = () => {
         if (notification.link) navigate(notification.link);
     };
 
+    // Load notifications
     useEffect(() => {
         if (!user) {
             setNotifications([]);
@@ -205,18 +208,14 @@ const Navbar = () => {
                 .get(`${API_BASE_URL}/api/notifications/`, {
                     headers: { Authorization: `Token ${token}` },
                 })
-                .then((res) => {
-                    if (!ignore) setNotifications(res.data);
-                })
+                .then((res) => { if (!ignore) setNotifications(res.data); })
                 .catch((err) => {
                     if (!ignore) {
                         console.error('Failed to load notifications:', err);
                         setNotificationsError('Could not load notifications.');
                     }
                 })
-                .finally(() => {
-                    if (!ignore) setNotificationsLoading(false);
-                });
+                .finally(() => { if (!ignore) setNotificationsLoading(false); });
         };
         loadNotifications();
         window.addEventListener('rda:notifications-changed', loadNotifications);
@@ -226,6 +225,7 @@ const Navbar = () => {
         };
     }, [user]);
 
+    // Close all panels on route change
     useEffect(() => {
         setNotificationsOpen(false);
         setMobileMenuOpen(false);
@@ -234,12 +234,31 @@ const Navbar = () => {
         setSearchQuery('');
     }, [location.pathname]);
 
+    // Focus search input when panel opens
     useEffect(() => {
-        if (searchOpen && searchInputRef.current) {
-            searchInputRef.current.focus();
-        }
+        if (searchOpen && searchInputRef.current) searchInputRef.current.focus();
     }, [searchOpen]);
 
+    // Click-outside: search (checks both the button ref and the panel ref)
+    useEffect(() => {
+        if (!searchOpen) return undefined;
+        const handle = (e) => {
+            const insideButton = searchButtonRef.current?.contains(e.target);
+            const insidePanel = searchPanelRef.current?.contains(e.target);
+            if (!insideButton && !insidePanel) {
+                setSearchOpen(false);
+                setSearchQuery('');
+            }
+        };
+        document.addEventListener('mousedown', handle);
+        document.addEventListener('touchstart', handle);
+        return () => {
+            document.removeEventListener('mousedown', handle);
+            document.removeEventListener('touchstart', handle);
+        };
+    }, [searchOpen]);
+
+    // Click-outside: notifications
     useEffect(() => {
         if (!notificationsOpen) return undefined;
         const handle = (e) => {
@@ -254,6 +273,7 @@ const Navbar = () => {
         };
     }, [notificationsOpen]);
 
+    // Click-outside: avatar
     useEffect(() => {
         if (!avatarOpen) return undefined;
         const handle = (e) => {
@@ -279,10 +299,15 @@ const Navbar = () => {
                 />
             )}
 
-            <header className="relative z-50 w-full max-w-full overflow-x-hidden border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                <nav className="mx-auto w-full max-w-6xl overflow-x-hidden px-3 py-3 sm:px-4">
-                    {/* Main row */}
-                    <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:gap-3">
+            {/*
+              No overflow-x-hidden on header or nav — those clip absolute-positioned
+              dropdown children. Horizontal overflow is handled by flex constraints.
+            */}
+            <header className="relative z-50 w-full border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <nav className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-4">
+                    <div className="flex w-full items-center justify-between gap-2">
+
+                        {/* Logo — far left */}
                         <Link
                             to="/"
                             className="shrink-0 text-base font-bold text-gray-900 sm:text-lg dark:text-white"
@@ -290,39 +315,12 @@ const Navbar = () => {
                             React Django App
                         </Link>
 
-                        {/* Desktop nav links */}
-                        <div className="hidden flex-1 items-center gap-1 md:flex">
-                            <NavLink to="/" end className={navLinkClass}>
-                                Home
-                            </NavLink>
-                            {user ? (
-                                <>
-                                    <NavLink to="/dashboard" className={navLinkClass}>
-                                        Dashboard
-                                    </NavLink>
-                                    <NavLink to="/items" className={navLinkClass}>
-                                        Items
-                                    </NavLink>
-                                    <NavLink to="/chat" className={navLinkClass}>
-                                        Chat
-                                    </NavLink>
-                                </>
-                            ) : (
-                                <>
-                                    <NavLink to="/login" className={navLinkClass}>
-                                        Login
-                                    </NavLink>
-                                    <NavLink to="/register" className={navLinkClass}>
-                                        Register
-                                    </NavLink>
-                                </>
-                            )}
-                        </div>
+                        {/* Right cluster: search · nav links · divider · bell · theme · avatar · hamburger */}
+                        <div className="flex items-center gap-1.5">
 
-                        {/* Right action cluster */}
-                        <div className="flex shrink-0 items-center gap-1.5">
-                            {/* Search toggle */}
+                            {/* Search icon button */}
                             <button
+                                ref={searchButtonRef}
                                 type="button"
                                 onClick={() => {
                                     setSearchOpen((o) => !o);
@@ -341,24 +339,49 @@ const Navbar = () => {
                                 <SearchIcon className="h-4 w-4" />
                             </button>
 
-                            {/* Divider (desktop only) */}
+                            {/* Desktop nav links */}
+                            <div className="hidden items-center gap-1 md:flex">
+                                <NavLink to="/" end className={navLinkClass}>
+                                    Home
+                                </NavLink>
+                                {user ? (
+                                    <>
+                                        <NavLink to="/dashboard" className={navLinkClass}>
+                                            Dashboard
+                                        </NavLink>
+                                        <NavLink to="/items" className={navLinkClass}>
+                                            Items
+                                        </NavLink>
+                                        <NavLink to="/chat" className={navLinkClass}>
+                                            Chat
+                                        </NavLink>
+                                    </>
+                                ) : (
+                                    <>
+                                        <NavLink to="/login" className={navLinkClass}>
+                                            Login
+                                        </NavLink>
+                                        <NavLink to="/register" className={navLinkClass}>
+                                            Register
+                                        </NavLink>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Divider */}
                             <span
                                 className="hidden h-5 w-px bg-gray-200 md:block dark:bg-gray-600"
                                 aria-hidden="true"
                             />
 
-                            {/* Bell (authenticated) */}
+                            {/* Bell */}
                             {user && (
                                 <div ref={notificationsRef} className="relative">
                                     <button
                                         type="button"
                                         onClick={handleNotificationToggle}
                                         onKeyDown={handleNotificationKeyDown}
-                                        aria-label={
-                                            notificationsOpen
-                                                ? 'Close notifications'
-                                                : 'Open notifications'
-                                        }
+                                        aria-label={notificationsOpen ? 'Close notifications' : 'Open notifications'}
                                         aria-expanded={notificationsOpen}
                                         className="relative rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
                                     >
@@ -380,14 +403,11 @@ const Navbar = () => {
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                                         {notificationsLoading
                                                             ? 'Loading...'
-                                                            : notificationsError ||
-                                                              'Backend notifications'}
+                                                            : notificationsError || 'Backend notifications'}
                                                     </p>
                                                 </div>
                                                 <span className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
-                                                    {unreadCount > 0
-                                                        ? `${unreadCount} unread`
-                                                        : 'All read'}
+                                                    {unreadCount > 0 ? `${unreadCount} unread` : 'All read'}
                                                 </span>
                                             </div>
 
@@ -405,9 +425,7 @@ const Navbar = () => {
                                                         <button
                                                             key={n.id}
                                                             type="button"
-                                                            onClick={() =>
-                                                                handleNotificationClick(n)
-                                                            }
+                                                            onClick={() => handleNotificationClick(n)}
                                                             className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60"
                                                         >
                                                             <div className="flex items-start justify-between gap-3">
@@ -427,9 +445,7 @@ const Navbar = () => {
                                                                     </p>
                                                                 </div>
                                                                 <span className="shrink-0 text-xs text-gray-400 dark:text-gray-500">
-                                                                    {formatNotificationTime(
-                                                                        n.created_at
-                                                                    )}
+                                                                    {formatNotificationTime(n.created_at)}
                                                                 </span>
                                                             </div>
                                                         </button>
@@ -449,9 +465,10 @@ const Navbar = () => {
                                 </div>
                             )}
 
+                            {/* Theme toggle */}
                             <ThemeToggle />
 
-                            {/* Avatar menu (desktop, authenticated) */}
+                            {/* Avatar menu — desktop only */}
                             {user && (
                                 <div ref={avatarRef} className="relative hidden md:block">
                                     <button
@@ -512,46 +529,7 @@ const Navbar = () => {
                         </div>
                     </div>
 
-                    {/* Search panel */}
-                    {searchOpen && (
-                        <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700">
-                            <div className="relative">
-                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
-                                    <SearchIcon className="h-4 w-4" />
-                                </span>
-                                <input
-                                    ref={searchInputRef}
-                                    type="search"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyDown={handleSearchKeyDown}
-                                    placeholder="Search pages..."
-                                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
-                                />
-                            </div>
-                            {suggestions.length > 0 ? (
-                                <div className="mt-1.5 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                    {suggestions.map((route) => (
-                                        <button
-                                            key={route.path}
-                                            type="button"
-                                            onClick={() => handleSuggestionClick(route.path)}
-                                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-700 dark:text-gray-200 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
-                                        >
-                                            <SearchIcon className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500" />
-                                            {route.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="mt-2 px-1 text-sm text-gray-500 dark:text-gray-400">
-                                    No pages match &ldquo;{searchQuery}&rdquo;.
-                                </p>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Mobile menu */}
+                    {/* Mobile menu — in-flow, beneath main row */}
                     {mobileMenuOpen && (
                         <div className="mt-3 w-full space-y-1.5 border-t border-gray-200 pt-3 md:hidden dark:border-gray-700">
                             {user && (
@@ -610,6 +588,50 @@ const Navbar = () => {
                         </div>
                     )}
                 </nav>
+
+                {/* Search panel — absolute, direct child of header, never affects layout */}
+                {searchOpen && (
+                    <div
+                        ref={searchPanelRef}
+                        className="absolute left-0 right-0 top-full z-50 border-b border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                    >
+                        <div className="mx-auto max-w-6xl px-3 py-3 sm:px-4">
+                            <div className="relative">
+                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+                                    <SearchIcon className="h-4 w-4" />
+                                </span>
+                                <input
+                                    ref={searchInputRef}
+                                    type="search"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={handleSearchKeyDown}
+                                    placeholder="Search pages..."
+                                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                                />
+                            </div>
+                            {suggestions.length > 0 ? (
+                                <div className="mt-1.5 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                                    {suggestions.map((route) => (
+                                        <button
+                                            key={route.path}
+                                            type="button"
+                                            onClick={() => handleSuggestionClick(route.path)}
+                                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-700 dark:text-gray-200 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
+                                        >
+                                            <SearchIcon className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500" />
+                                            {route.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="mt-2 px-1 text-sm text-gray-500 dark:text-gray-400">
+                                    No pages match &ldquo;{searchQuery}&rdquo;.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
             </header>
         </>
     );
