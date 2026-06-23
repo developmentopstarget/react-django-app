@@ -1,5 +1,4 @@
 import json
-from urllib.parse import parse_qs
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -28,34 +27,45 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
-
-        qs = parse_qs(self.scope.get("query_string", b"").decode())
-        token_key = qs.get("token", [None])[0]
-
-        if not token_key:
-            await self.close(code=4001)
-            return
-
-        self.scope["user"] = await get_user(token_key)
-
-        if self.scope["user"].is_anonymous:
-            await self.close(code=4001)
-            return
-
-        expected_room = f"user_{self.scope['user'].id}"
-        if self.room_name != expected_room:
-            await self.close(code=4003)
-            return
-
-        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        self.authenticated = False
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        if self.authenticated:
+            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
+        try:
+            data = json.loads(text_data)
+        except (json.JSONDecodeError, ValueError):
+            await self.close(code=4001)
+            return
+
+        if not self.authenticated:
+            if data.get("type") != "auth":
+                await self.close(code=4001)
+                return
+            token_key = data.get("token")
+            if not token_key:
+                await self.close(code=4001)
+                return
+            user = await get_user(token_key)
+            if user.is_anonymous:
+                await self.close(code=4001)
+                return
+            expected_room = f"user_{user.id}"
+            if self.room_name != expected_room:
+                await self.close(code=4003)
+                return
+            self.scope["user"] = user
+            self.authenticated = True
+            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+            await self.send(text_data=json.dumps({"type": "auth.success"}))
+            return
+
+        message = data.get("message")
+        if not message:
+            return
         user = self.scope["user"]
 
         await save_message(user, self.room_name, message)
