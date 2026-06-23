@@ -29,14 +29,17 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [historyError, setHistoryError] = useState('');
+    const [wsAuthenticated, setWsAuthenticated] = useState(false);
     const { user } = useAuth();
 
     const roomName = user ? `user_${user.id}` : null;
     const token = localStorage.getItem('token');
-    const socketUrl = token && roomName ? `${WS_BASE_URL}/ws/chat/${roomName}/?token=${token}` : null;
+    const socketUrl = token && roomName ? `${WS_BASE_URL}/ws/chat/${roomName}/` : null;
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
         shouldReconnect: () => true,
+        onOpen: () => sendMessage(JSON.stringify({ type: 'auth', token })),
+        onClose: () => setWsAuthenticated(false),
     });
 
     useEffect(() => {
@@ -64,6 +67,10 @@ const Chat = () => {
     useEffect(() => {
         if (lastMessage !== null) {
             const data = JSON.parse(lastMessage.data);
+            if (data.type === 'auth.success') {
+                setWsAuthenticated(true);
+                return;
+            }
             setMessages((prev) =>
                 prev.concat({
                     message: data.message,
@@ -129,12 +136,12 @@ const Chat = () => {
                         onChange={(e) => setInput(e.target.value)}
                         className="flex-grow px-4 py-2 border rounded-l-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
                         placeholder="Type a message..."
-                        disabled={readyState !== ReadyState.OPEN}
+                        disabled={readyState !== ReadyState.OPEN || !wsAuthenticated}
                     />
                     <button
                         type="submit"
                         className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
-                        disabled={readyState !== ReadyState.OPEN}
+                        disabled={readyState !== ReadyState.OPEN || !wsAuthenticated}
                     >
                         Send
                     </button>
