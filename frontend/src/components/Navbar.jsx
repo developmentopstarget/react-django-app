@@ -99,8 +99,7 @@ const Navbar = () => {
     const [notificationsLoading, setNotificationsLoading] = useState(false);
     const [notificationsError, setNotificationsError] = useState('');
 
-    const searchButtonRef = useRef(null);
-    const searchPanelRef = useRef(null);
+    const searchWrapperRef = useRef(null);
     const searchInputRef = useRef(null);
     const notificationsRef = useRef(null);
     const avatarRef = useRef(null);
@@ -238,20 +237,20 @@ const Navbar = () => {
     useEffect(() => {
         if (searchOpen && searchInputRef.current) searchInputRef.current.focus();
     }, [searchOpen]);
-
-    // Click-outside: search (checks both the button ref and the panel ref)
+    // Click-outside: search
     useEffect(() => {
         if (!searchOpen) return undefined;
+
         const handle = (e) => {
-            const insideButton = searchButtonRef.current?.contains(e.target);
-            const insidePanel = searchPanelRef.current?.contains(e.target);
-            if (!insideButton && !insidePanel) {
+            if (!searchWrapperRef.current?.contains(e.target)) {
                 setSearchOpen(false);
                 setSearchQuery('');
             }
         };
+
         document.addEventListener('mousedown', handle);
         document.addEventListener('touchstart', handle);
+
         return () => {
             document.removeEventListener('mousedown', handle);
             document.removeEventListener('touchstart', handle);
@@ -318,26 +317,34 @@ const Navbar = () => {
                         {/* Right cluster: search · nav links · divider · bell · theme · avatar · hamburger */}
                         <div className="flex items-center gap-1.5">
 
-                            {/* Search icon button */}
-                            <button
-                                ref={searchButtonRef}
-                                type="button"
-                                onClick={() => {
-                                    setSearchOpen((o) => !o);
-                                    setNotificationsOpen(false);
-                                    setAvatarOpen(false);
-                                    setMobileMenuOpen(false);
-                                }}
-                                aria-label={searchOpen ? 'Close search' : 'Open search'}
-                                aria-expanded={searchOpen}
-                                className={`rounded-md p-2 transition ${
-                                    searchOpen
-                                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300'
-                                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
-                                }`}
-                            >
-                                <SearchIcon className="h-4 w-4" />
-                            </button>
+                            {/* Search: icon button or inline input */}
+                            <div ref={searchWrapperRef}>
+                                {searchOpen ? (
+                                    <input
+                                        ref={searchInputRef}
+                                        type="search"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={handleSearchKeyDown}
+                                        placeholder="Search..."
+                                        className="w-48 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                                    />
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSearchOpen(true);
+                                            setNotificationsOpen(false);
+                                            setAvatarOpen(false);
+                                            setMobileMenuOpen(false);
+                                        }}
+                                        aria-label="Open search"
+                                        className="rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                                    >
+                                        <SearchIcon className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
 
                             {/* Desktop nav links */}
                             <div className="hidden items-center gap-1 md:flex">
@@ -588,50 +595,6 @@ const Navbar = () => {
                         </div>
                     )}
                 </nav>
-
-                {/* Search panel — absolute, direct child of header, never affects layout */}
-                {searchOpen && (
-                    <div
-                        ref={searchPanelRef}
-                        className="absolute left-0 right-0 top-full z-50 border-b border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
-                    >
-                        <div className="mx-auto max-w-6xl px-3 py-3 sm:px-4">
-                            <div className="relative">
-                                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
-                                    <SearchIcon className="h-4 w-4" />
-                                </span>
-                                <input
-                                    ref={searchInputRef}
-                                    type="search"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyDown={handleSearchKeyDown}
-                                    placeholder="Search pages..."
-                                    className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
-                                />
-                            </div>
-                            {suggestions.length > 0 ? (
-                                <div className="mt-1.5 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                    {suggestions.map((route) => (
-                                        <button
-                                            key={route.path}
-                                            type="button"
-                                            onClick={() => handleSuggestionClick(route.path)}
-                                            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-indigo-50 hover:text-indigo-700 dark:text-gray-200 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-300"
-                                        >
-                                            <SearchIcon className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500" />
-                                            {route.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="mt-2 px-1 text-sm text-gray-500 dark:text-gray-400">
-                                    No pages match &ldquo;{searchQuery}&rdquo;.
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                )}
             </header>
         </>
     );
