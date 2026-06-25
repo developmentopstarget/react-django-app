@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { parseAuthErrors, useAuth } from '../context/AuthContext';
+import { parseAuthErrors } from '../context/authErrors';
+import { useAuth } from '../context/useAuth';
 
 function UserIcon() {
     return (

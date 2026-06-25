@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { API_BASE_URL, WS_BASE_URL } from '../config/runtime';
 
 
