@@ -191,10 +191,6 @@ const Navbar = () => {
         }
     };
 
-    const handleNotificationKeyDown = (e) => {
-        if (e.key === 'Escape') setNotificationsOpen(false);
-    };
-
     const handleAvatarKeyDown = (e) => {
         if (e.key === 'Escape') setAvatarOpen(false);
     };
@@ -332,6 +328,15 @@ const Navbar = () => {
         };
     }, [notificationsOpen]);
 
+    useEffect(() => {
+        if (!notificationsOpen) return undefined;
+        const handle = (e) => {
+            if (e.key === 'Escape') setNotificationsOpen(false);
+        };
+        document.addEventListener('keydown', handle);
+        return () => document.removeEventListener('keydown', handle);
+    }, [notificationsOpen]);
+
     // Click-outside: avatar
     useEffect(() => {
         if (!avatarOpen) return undefined;
@@ -456,10 +461,11 @@ const Navbar = () => {
                                     <button
                                         type="button"
                                         onClick={handleNotificationToggle}
-                                        onKeyDown={handleNotificationKeyDown}
                                         aria-label={notificationsOpen ? 'Close notifications' : 'Open notifications'}
+                                        aria-controls="navbar-notifications"
                                         aria-expanded={notificationsOpen}
-                                        className="relative rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+                                        aria-haspopup="dialog"
+                                        className="relative rounded-md p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-offset-gray-800"
                                     >
                                         <BellIcon className="h-5 w-5" />
                                         {unreadCount > 0 && (
@@ -470,19 +476,24 @@ const Navbar = () => {
                                     </button>
 
                                     {notificationsOpen && (
-                                        <div className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl sm:w-80 dark:border-gray-700 dark:bg-gray-800">
-                                            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-                                                <div>
+                                        <div
+                                            id="navbar-notifications"
+                                            role="dialog"
+                                            aria-label="Notifications"
+                                            className="absolute right-0 top-11 z-50 w-72 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl sm:w-80 dark:border-gray-700 dark:bg-gray-800"
+                                        >
+                                            <div className="flex items-start justify-between gap-3 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                                                <div className="min-w-0">
                                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
                                                         Notifications
                                                     </h3>
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                                         {notificationsLoading
                                                             ? 'Loading...'
-                                                            : notificationsError || 'Backend notifications'}
+                                                            : notificationsError || 'App alerts and updates'}
                                                     </p>
                                                 </div>
-                                                <span className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
+                                                <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">
                                                     {unreadCount > 0 ? `${unreadCount} unread` : 'All read'}
                                                 </span>
                                             </div>
@@ -502,12 +513,12 @@ const Navbar = () => {
                                                             key={n.id}
                                                             type="button"
                                                             onClick={() => handleNotificationClick(n)}
-                                                            className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/60"
+                                                            className="w-full px-4 py-3 text-left transition hover:bg-gray-50 focus:bg-gray-50 focus:outline-none dark:hover:bg-gray-700/60 dark:focus:bg-gray-700/60"
                                                         >
                                                             <div className="flex items-start justify-between gap-3">
-                                                                <div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                <div className="min-w-0">
+                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                        <p className="break-words text-sm font-medium text-gray-900 dark:text-white">
                                                                             {n.title}
                                                                         </p>
                                                                         {!n.is_read && (
@@ -516,7 +527,7 @@ const Navbar = () => {
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                                                                    <p className="mt-1 break-words text-sm text-gray-600 dark:text-gray-300">
                                                                         {n.message}
                                                                     </p>
                                                                 </div>
@@ -527,14 +538,19 @@ const Navbar = () => {
                                                         </button>
                                                     ))
                                                 ) : (
-                                                    <div className="px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
-                                                        No notifications yet.
+                                                    <div className="px-4 py-6">
+                                                        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                            No notifications yet.
+                                                        </p>
+                                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                                            App alerts will appear here when there is something to review.
+                                                        </p>
                                                     </div>
                                                 )}
                                             </div>
 
                                             <div className="bg-gray-50 px-4 py-3 text-xs text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
-                                                Notifications are generated by backend app events.
+                                                Notifications are generated by app events.
                                             </div>
                                         </div>
                                     )}
