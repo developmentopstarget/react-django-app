@@ -5,6 +5,8 @@ import { useAuth } from '../context/useAuth';
 import { API_BASE_URL, WS_BASE_URL } from '../config/runtime';
 
 
+const AUTH_CLOSE_CODES = new Set([4001, 4003]);
+
 const formatMessageTime = (timestamp) => {
     if (!timestamp) {
         return '';
@@ -37,7 +39,7 @@ const Chat = () => {
     const socketUrl = token && roomName ? `${WS_BASE_URL}/ws/chat/${roomName}/` : null;
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
-        shouldReconnect: () => true,
+        shouldReconnect: (closeEvent) => !AUTH_CLOSE_CODES.has(closeEvent.code),
         onOpen: () => sendMessage(JSON.stringify({ type: 'auth', token })),
         onClose: () => setWsAuthenticated(false),
     });
@@ -66,11 +68,30 @@ const Chat = () => {
 
     useEffect(() => {
         if (lastMessage !== null) {
-            const data = JSON.parse(lastMessage.data);
+            let data;
+
+            try {
+                data = JSON.parse(lastMessage.data);
+            } catch {
+                return;
+            }
+
             if (data.type === 'auth.success') {
                 setWsAuthenticated(true);
                 return;
             }
+
+            if (data.type === 'error') {
+                if (typeof data.error === 'string') {
+                    setHistoryError(data.error);
+                }
+                return;
+            }
+
+            if (typeof data.message !== 'string') {
+                return;
+            }
+
             setMessages((prev) =>
                 prev.concat({
                     message: data.message,
