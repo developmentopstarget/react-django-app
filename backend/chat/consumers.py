@@ -1,4 +1,5 @@
 import json
+import logging
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -7,6 +8,11 @@ from openai import AsyncOpenAI
 from rest_framework.authtoken.models import Token
 
 from .models import Message
+
+
+logger = logging.getLogger(__name__)
+MAX_MESSAGE_LENGTH = 2000
+AI_FAILURE_RESPONSE = "Sorry, I couldn't process that AI request right now."
 
 
 @database_sync_to_async
@@ -21,6 +27,21 @@ def get_user(token_key):
 @database_sync_to_async
 def save_message(user, room, content):
     Message.objects.create(user=user, room_name=room, content=content)
+
+
+def validate_message(data):
+    message = data.get("message")
+    if not isinstance(message, str):
+        return None, "Message must be a string."
+
+    message = message.strip()
+    if not message:
+        return None, "Message cannot be empty."
+
+    if len(message) > MAX_MESSAGE_LENGTH:
+        return None, f"Message cannot exceed {MAX_MESSAGE_LENGTH} characters."
+
+    return message, None
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -63,8 +84,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"type": "auth.success"}))
             return
 
-        message = data.get("message")
-        if not message:
+        message, error = validate_message(data)
+        if error:
+            await self.send(text_data=json.dumps({"type": "error", "error": error}))
             return
         user = self.scope["user"]
 
@@ -89,8 +111,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     max_tokens=150,
                 )
                 ai_response = response.choices[0].message.content.strip()
-            except Exception as e:
-                ai_response = f"Error: {e}"
+            except Exception:
+                logger.exception("OpenAI chat completion failed")
+                ai_response = AI_FAILURE_RESPONSE
 
             ai_message = f"AI: {ai_response}"
             await save_message(user, self.room_name, ai_message)
