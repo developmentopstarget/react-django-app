@@ -81,9 +81,12 @@ const searchableRoutes = [
     { label: 'Chat', path: '/chat' },
 ];
 
-function getInitials(username) {
-    if (!username) return '?';
-    return username.slice(0, 2).toUpperCase();
+function getDisplayName(user) {
+    return user?.first_name || user?.username || user?.email || 'User';
+}
+
+function getAvatarInitial(user) {
+    return getDisplayName(user).charAt(0).toUpperCase() || 'U';
 }
 
 const Navbar = () => {
@@ -107,6 +110,8 @@ const Navbar = () => {
     const unreadCount = notifications.filter((n) => !n.is_read).length;
 
     const handleLogout = async () => {
+        setAvatarOpen(false);
+        setMobileMenuOpen(false);
         await logout();
         navigate('/', { replace: true });
     };
@@ -137,6 +142,10 @@ const Navbar = () => {
 
     const handleNotificationKeyDown = (e) => {
         if (e.key === 'Escape') setNotificationsOpen(false);
+    };
+
+    const handleAvatarKeyDown = (e) => {
+        if (e.key === 'Escape') setAvatarOpen(false);
     };
 
     const markAllNotificationsRead = async () => {
@@ -285,6 +294,15 @@ const Navbar = () => {
             document.removeEventListener('mousedown', handle);
             document.removeEventListener('touchstart', handle);
         };
+    }, [avatarOpen]);
+
+    useEffect(() => {
+        if (!avatarOpen) return undefined;
+        const handle = (e) => {
+            if (e.key === 'Escape') setAvatarOpen(false);
+        };
+        document.addEventListener('keydown', handle);
+        return () => document.removeEventListener('keydown', handle);
     }, [avatarOpen]);
 
     return (
@@ -484,18 +502,19 @@ const Navbar = () => {
                                             setAvatarOpen((o) => !o);
                                             setNotificationsOpen(false);
                                         }}
-                                        aria-label="Open user menu"
+                                        onKeyDown={handleAvatarKeyDown}
+                                        aria-label={avatarOpen ? 'Close user menu' : 'Open user menu'}
                                         aria-expanded={avatarOpen}
                                         className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                                     >
-                                        {getInitials(user.username)}
+                                        {getAvatarInitial(user)}
                                     </button>
 
                                     {avatarOpen && (
-                                        <div className="absolute right-0 top-10 z-50 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                        <div className="absolute right-0 top-10 z-50 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                                             <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
-                                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                    {user.username}
+                                                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {getDisplayName(user)}
                                                 </p>
                                                 {user.email && (
                                                     <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">
@@ -503,10 +522,31 @@ const Navbar = () => {
                                                     </p>
                                                 )}
                                             </div>
+                                            <Link
+                                                to="/dashboard"
+                                                onClick={() => setAvatarOpen(false)}
+                                                className="block px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
+                                            >
+                                                Dashboard
+                                            </Link>
+                                            <Link
+                                                to="/items"
+                                                onClick={() => setAvatarOpen(false)}
+                                                className="block px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
+                                            >
+                                                Items
+                                            </Link>
+                                            <Link
+                                                to="/chat"
+                                                onClick={() => setAvatarOpen(false)}
+                                                className="block px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
+                                            >
+                                                Chat
+                                            </Link>
                                             <button
                                                 type="button"
                                                 onClick={handleLogout}
-                                                className="w-full px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
+                                                className="w-full border-t border-gray-100 px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700/60"
                                             >
                                                 Sign out
                                             </button>
@@ -543,11 +583,11 @@ const Navbar = () => {
                                 <div className="mb-3 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-900/40">
                                     <div className="flex items-center gap-3">
                                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
-                                            {getInitials(user.username)}
+                                            {getAvatarInitial(user)}
                                         </span>
                                         <div className="min-w-0">
                                             <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {user.username}
+                                                {getDisplayName(user)}
                                             </p>
                                             {user.email && (
                                                 <p className="truncate text-xs text-gray-500 dark:text-gray-400">
