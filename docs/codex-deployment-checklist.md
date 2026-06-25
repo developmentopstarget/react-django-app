@@ -1,11 +1,16 @@
-# Render Backend + Vercel Frontend Deployment Checklist
+# Vercel Frontend Migration / Alternative Deployment Checklist
+
+This checklist covers a Vercel frontend with a Render backend. It is a migration/alternative to the current `README.md` path, which documents a Render frontend deployment.
 
 ## 1. Render backend service setup
 
 - Create a Render **Web Service** for the Django backend.
 - Runtime: **Docker**.
-- Root/build context: `backend`.
-- Dockerfile: `backend/Dockerfile`.
+- TODO: Confirm exact Render **Root Directory**.
+- TODO: Confirm exact Render **Dockerfile Path**.
+- TODO: Confirm exact Render **Build Context**.
+- If Render root directory/build context is `backend`, Dockerfile path should be `Dockerfile`.
+- If Render root directory is the repo root, Dockerfile path should be `backend/Dockerfile`, and the build context must still match the Dockerfile assumptions.
 - The Docker image installs `backend/requirements.txt`, runs `python manage.py collectstatic --noinput`, and uses `backend/entrypoint.sh`.
 - Start command is already handled by the Docker `CMD`:
 
@@ -38,7 +43,7 @@ Set these on the Render backend service:
 DJANGO_ENV=production
 DEBUG=False
 SECRET_KEY=<strong-render-secret>
-ALLOWED_HOSTS=<render-backend-host>
+ALLOWED_HOSTS=<render-backend-host>,<vercel-frontend-host>
 CORS_ALLOWED_ORIGINS=<vercel-frontend-origin>
 DATABASE_URL=<render-postgres-internal-url>
 REDIS_URL=<render-redis-internal-url>
@@ -55,15 +60,23 @@ DB_HOST=<database-host>
 DB_PORT=5432
 ```
 
-- TODO: Confirm whether `OPENAI_API_KEY` is required for the deployed feature set. `/ai` chat calls use it.
+- `OPENAI_API_KEY` is not required for Django startup, but `/ai` chat will fail or return an error without it.
 
-## 4. Backend test, build, and start commands
+## 4. Backend and frontend verification commands
 
 Run backend tests before deploy:
 
 ```bash
 cd backend
 python manage.py test
+```
+
+Run frontend checks before deploy:
+
+```bash
+cd frontend
+npm run lint
+npm run build
 ```
 
 Optional local Docker build check:
@@ -126,6 +139,7 @@ Notes:
 ## 7. CORS, ALLOWED_HOSTS, and WebSocket origin risks
 
 - `ALLOWED_HOSTS` must include the Render backend host without protocol.
+- `ALLOWED_HOSTS` must also include the Vercel frontend host without protocol because `backend/config/asgi.py` uses `AllowedHostsOriginValidator` for WebSockets.
 - `CORS_ALLOWED_ORIGINS` must include the Vercel frontend origin with protocol, for example `https://<vercel-domain>`.
 - `CSRF_TRUSTED_ORIGINS` is set from `CORS_ALLOWED_ORIGINS` in `backend/config/settings.py`.
 - WebSockets use `AllowedHostsOriginValidator`, so failed WebSocket connections may mean the request origin or backend host is not allowed.
@@ -183,3 +197,11 @@ curl https://<render-backend-host>/api/health/
 - If `OPENAI_API_KEY` is configured, send a `/ai <message>` chat command and confirm an AI response.
 - Check browser console for CORS, mixed-content, `403`, `401`, or WebSocket origin errors.
 - Check Render logs for Django startup, migration, database, Redis, and Daphne errors.
+
+## 10. Follow-up tasks
+
+- Production Django security hardening.
+- Explicit OpenAI feature decision.
+- Possible `render.yaml`.
+- Possible `vercel.json`.
+- README alignment after the deployment target is finalized.
