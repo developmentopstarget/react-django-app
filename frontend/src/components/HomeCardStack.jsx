@@ -56,7 +56,7 @@ export default function HomeCardStack() {
 
     return (
         <section
-            className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-900"
+            className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-900 sm:p-6"
             aria-labelledby="home-card-stack-title"
         >
             <div className="flex items-start justify-between gap-4">
@@ -92,22 +92,22 @@ export default function HomeCardStack() {
                 </div>
             </div>
 
-            <div className="relative mt-5 h-72 overflow-hidden sm:h-80">
+            <div className="relative mt-5 h-80 overflow-hidden sm:h-96">
                 {stackCards.map((card, index) => {
                     const offset = getStackPosition(index, activeIndex);
                     const isActive = offset === 0;
                     const isVisible = Math.abs(offset) <= 2;
-                    const rotate = offset * 7;
-                    const translateX = offset * 32;
-                    const translateY = Math.abs(offset) * 16;
-                    const scale = 1 - Math.abs(offset) * 0.07;
+                    const rotate = offset * 3;
+                    const translateX = offset * 88;
+                    const translateY = Math.abs(offset) * 12;
+                    const scale = 1 - Math.abs(offset) * 0.04;
 
                     return (
                         <article
                             key={card.title}
                             aria-hidden={!isActive}
                             className={[
-                                'absolute left-1/2 top-2 h-60 w-[78%] max-w-[18rem] -translate-x-1/2 rounded-lg border border-white/70 p-5 shadow-lg transition-all duration-300 ease-out motion-reduce:transition-none dark:border-white/10 sm:top-4 sm:h-64',
+                                'absolute left-1/2 top-2 h-64 w-[78%] max-w-[22rem] -translate-x-1/2 rounded-lg border border-white/70 p-5 shadow-lg transition-all duration-300 ease-out motion-reduce:transition-none dark:border-white/10 sm:top-5 sm:h-72 sm:w-[48%] sm:max-w-[24rem] lg:w-[34%]',
                                 card.surface,
                                 isVisible ? 'opacity-100' : 'pointer-events-none opacity-0',
                                 isActive ? 'z-30' : 'z-10',
