@@ -123,8 +123,6 @@ function formatNotificationTime(value) {
 
 const searchableRoutes = [
     { label: 'Home', path: '/' },
-    { label: 'Login', path: '/login' },
-    { label: 'Register', path: '/register' },
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Items', path: '/items' },
     { label: 'Chat', path: '/chat' },
@@ -392,17 +390,58 @@ const Navbar = () => {
                         <div className="flex items-center gap-1.5">
 
                             {/* Search: icon button or inline input */}
-                            <div ref={searchWrapperRef}>
+                            <div ref={searchWrapperRef} className="relative">
                                 {searchOpen ? (
-                                    <input
-                                        ref={searchInputRef}
-                                        type="search"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyDown={handleSearchKeyDown}
-                                        placeholder="Search..."
-                                        className="w-48 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
-                                    />
+                                    <>
+                                        <div className="flex w-52 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-gray-500 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:focus-within:border-indigo-400 dark:focus-within:ring-indigo-400">
+                                            <SearchIcon className="h-4 w-4 shrink-0" />
+                                            <input
+                                                ref={searchInputRef}
+                                                type="search"
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onKeyDown={handleSearchKeyDown}
+                                                placeholder="Search pages"
+                                                aria-label="Search pages"
+                                                aria-controls="navbar-search-results"
+                                                className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-gray-900 placeholder-gray-400 outline-none dark:text-white dark:placeholder-gray-400"
+                                            />
+                                        </div>
+                                        <div
+                                            id="navbar-search-results"
+                                            className="absolute right-0 top-11 z-50 w-64 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                                        >
+                                            <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                                Pages
+                                            </div>
+                                            {suggestions.length > 0 ? (
+                                                <div className="py-1">
+                                                    {suggestions.map((route) => (
+                                                        <button
+                                                            key={route.path}
+                                                            type="button"
+                                                            onClick={() => handleSuggestionClick(route.path)}
+                                                            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-50 focus:bg-gray-50 focus:outline-none dark:text-gray-200 dark:hover:bg-gray-700/60 dark:focus:bg-gray-700/60"
+                                                        >
+                                                            <span className="font-medium">{route.label}</span>
+                                                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                                {route.path}
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="px-3 py-4">
+                                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        No matching pages
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        Try Home, Dashboard, Items, Chat, Account, or About.
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
                                 ) : (
                                     <button
                                         type="button"
