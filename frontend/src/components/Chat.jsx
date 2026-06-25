@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useAuth } from '../context/useAuth';
@@ -31,12 +31,15 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [historyError, setHistoryError] = useState('');
+    const [historyLoading, setHistoryLoading] = useState(false);
     const [wsAuthenticated, setWsAuthenticated] = useState(false);
+    const messagesEndRef = useRef(null);
     const { user } = useAuth();
 
     const roomName = user ? `user_${user.id}` : null;
     const token = localStorage.getItem('token');
     const socketUrl = token && roomName ? `${WS_BASE_URL}/ws/chat/${roomName}/` : null;
+    const trimmedInput = input.trim();
 
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl, {
         shouldReconnect: (closeEvent) => !AUTH_CLOSE_CODES.has(closeEvent.code),
@@ -50,6 +53,7 @@ const Chat = () => {
             return;
         }
 
+        setHistoryLoading(true);
         axios
             .get(`${API_BASE_URL}/api/chat/history/`)
             .then((response) => {
@@ -63,6 +67,9 @@ const Chat = () => {
             })
             .catch(() => {
                 setHistoryError('Failed to load chat history.');
+            })
+            .finally(() => {
+                setHistoryLoading(false);
             });
     }, [user]);
 
@@ -101,10 +108,14 @@ const Chat = () => {
         }
     }, [lastMessage]);
 
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
     const handleSendMessage = (e) => {
         e.preventDefault();
 
-        if (input.trim()) {
+        if (trimmedInput) {
             sendMessage(JSON.stringify({ message: input }));
             setInput('');
         }
@@ -117,52 +128,128 @@ const Chat = () => {
         [ReadyState.CLOSED]: 'Closed',
         [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
     }[readyState];
+    const canSend = readyState === ReadyState.OPEN && wsAuthenticated && Boolean(trimmedInput);
+    const isConnected = readyState === ReadyState.OPEN && wsAuthenticated;
+    const statusTone = isConnected
+        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
+        : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+
+    const getMessageKind = (message) => {
+        if (message.startsWith('AI: ')) {
+            return 'ai';
+        }
+
+        if (user?.username && message.startsWith(`${user.username}:`)) {
+            return 'current';
+        }
+
+        return 'other';
+    };
 
     if (!user) {
-        return <div className="min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">Please log in to chat.</div>;
+        return (
+            <div className="flex min-h-screen w-full max-w-full items-center justify-center overflow-x-hidden bg-gray-100 px-4 text-center text-gray-900 dark:bg-gray-900 dark:text-white">
+                Please log in to chat.
+            </div>
+        );
     }
 
     return (
-        <div className="flex h-[calc(100vh-65px)] flex-col bg-gray-100 dark:bg-gray-900">
-            <div className="p-4 bg-gray-200 text-center text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-                <span>The WebSocket is currently {connectionStatus}</span>
+        <div className="flex h-[calc(100vh-65px)] flex-col bg-slate-100 text-slate-900 dark:bg-gray-950 dark:text-gray-100">
+            <div className="border-b border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:px-6">
+                <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-semibold text-slate-950 dark:text-white">Chat</h1>
+                        <p className="text-sm text-slate-500 dark:text-gray-400">
+                            Signed in as {user.username || 'your account'}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs font-medium sm:justify-end">
+                        <span className={`rounded-full px-3 py-1 ${statusTone}`}>
+                            WebSocket: {connectionStatus}
+                        </span>
+                        <span className={`rounded-full px-3 py-1 ${statusTone}`}>
+                            Auth: {wsAuthenticated ? 'Verified' : 'Pending'}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700 dark:bg-gray-800 dark:text-gray-300">
+                            History: {historyLoading ? 'Loading' : 'Loaded'}
+                        </span>
+                    </div>
+                </div>
             </div>
 
             {historyError && (
-                <div className="bg-red-50 p-3 text-center text-base sm:text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                <div className="border-b border-red-200 bg-red-50 p-3 text-center text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/30 dark:text-red-300">
                     {historyError}
                 </div>
             )}
 
-            <div className="flex-grow p-6 overflow-auto">
-                <div className="space-y-4">
-                    {messages.map((msg, index) => (
-                        <div key={index} className="p-4 bg-white rounded-lg shadow-md dark:bg-gray-800">
-                            <p className="text-gray-800 dark:text-gray-100">{msg.message}</p>
-                            {formatMessageTime(msg.timestamp) && (
-                                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                                    {formatMessageTime(msg.timestamp)}
-                                </p>
-                            )}
+            <div className="flex-grow overflow-auto px-4 py-5 sm:px-6">
+                <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col">
+                    {historyLoading && messages.length === 0 ? (
+                        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/70 p-8 text-center text-slate-500 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-400">
+                            Loading chat history...
                         </div>
-                    ))}
+                    ) : messages.length === 0 ? (
+                        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/70 p-8 text-center dark:border-gray-700 dark:bg-gray-900/60">
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">No messages yet</h2>
+                                <p className="mt-2 max-w-sm text-sm text-slate-500 dark:text-gray-400">
+                                    Start the conversation with a message below.
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {messages.map((msg, index) => {
+                                const messageKind = getMessageKind(msg.message);
+                                const isCurrentUser = messageKind === 'current';
+                                const bubbleClass = isCurrentUser
+                                    ? 'bg-indigo-600 text-white'
+                                    : messageKind === 'ai'
+                                      ? 'bg-violet-50 text-violet-950 ring-1 ring-violet-200 dark:bg-violet-950/40 dark:text-violet-100 dark:ring-violet-800'
+                                      : 'bg-white text-slate-900 ring-1 ring-slate-200 dark:bg-gray-900 dark:text-gray-100 dark:ring-gray-800';
+                                const timeClass = isCurrentUser
+                                    ? 'text-indigo-100'
+                                    : 'text-slate-500 dark:text-gray-400';
+                                const formattedTime = formatMessageTime(msg.timestamp);
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                                    >
+                                        <div className={`max-w-[88%] rounded-2xl px-4 py-3 shadow-sm sm:max-w-[72%] ${bubbleClass}`}>
+                                            <p className="whitespace-pre-wrap break-words text-sm leading-6">{msg.message}</p>
+                                            {formattedTime && (
+                                                <p className={`mt-2 text-xs ${timeClass}`}>
+                                                    {formattedTime}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                            <div ref={messagesEndRef} />
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="p-4 bg-white border-t dark:border-gray-700 dark:bg-gray-800">
-                <form onSubmit={handleSendMessage} className="flex">
+            <div className="border-t border-slate-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
+                <form onSubmit={handleSendMessage} className="mx-auto flex w-full max-w-5xl gap-2">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        className="flex-grow px-4 py-2 border rounded-l-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
+                        className="min-w-0 flex-grow rounded-lg border border-slate-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:placeholder-gray-400 dark:disabled:bg-gray-800"
                         placeholder="Type a message..."
                         disabled={readyState !== ReadyState.OPEN || !wsAuthenticated}
                     />
                     <button
                         type="submit"
-                        className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
-                        disabled={readyState !== ReadyState.OPEN || !wsAuthenticated}
+                        className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400 dark:focus:ring-offset-gray-900 sm:px-6"
+                        disabled={!canSend}
                     >
                         Send
                     </button>
