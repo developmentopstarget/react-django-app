@@ -58,6 +58,55 @@ function CloseIcon({ className = '' }) {
     );
 }
 
+function LogoutIcon({ className = '' }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="m16 17 5-5-5-5" />
+            <path d="M21 12H9" />
+        </svg>
+    );
+}
+
+function UserIcon({ className = '' }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20 21a8 8 0 0 0-16 0" />
+            <circle cx="12" cy="7" r="4" />
+        </svg>
+    );
+}
+
+function InfoIcon({ className = '' }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+        </svg>
+    );
+}
+
+function BrandLogo() {
+    return (
+        <span className="flex items-center gap-2" aria-label="DOT DevOps Target">
+            <span className="relative inline-flex items-center text-lg font-black tracking-normal text-gray-950 dark:text-white">
+                <span>D</span>
+                <svg className="mx-0.5 h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="3" />
+                    <circle cx="12" cy="12" r="5" fill="none" stroke="#dc2626" strokeWidth="3" />
+                    <circle cx="12" cy="12" r="2" fill="#dc2626" />
+                </svg>
+                <span>T</span>
+            </span>
+            <span className="flex flex-col leading-none">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">DevOps</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-red-600">Target</span>
+            </span>
+        </span>
+    );
+}
+
 function formatNotificationTime(value) {
     if (!value) return '';
     try {
@@ -79,6 +128,8 @@ const searchableRoutes = [
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Items', path: '/items' },
     { label: 'Chat', path: '/chat' },
+    { label: 'Account', path: '/account' },
+    { label: 'About', path: '/about' },
 ];
 
 function getDisplayName(user) {
@@ -327,9 +378,9 @@ const Navbar = () => {
                         {/* Logo — far left */}
                         <Link
                             to="/"
-                            className="shrink-0 text-base font-bold text-gray-900 sm:text-lg dark:text-white"
+                            className="shrink-0 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                         >
-                            React Django App
+                            <BrandLogo />
                         </Link>
 
                         {/* Right cluster: search · nav links · divider · bell · theme · avatar · hamburger */}
@@ -511,7 +562,7 @@ const Navbar = () => {
                                     </button>
 
                                     {avatarOpen && (
-                                        <div className="absolute right-0 top-10 z-50 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                        <div className="absolute right-0 top-10 z-50 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
                                             <div className="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
                                                 <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
                                                     {getDisplayName(user)}
@@ -522,34 +573,39 @@ const Navbar = () => {
                                                     </p>
                                                 )}
                                             </div>
-                                            <Link
-                                                to="/dashboard"
-                                                onClick={() => setAvatarOpen(false)}
-                                                className="block px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
-                                            >
-                                                Dashboard
-                                            </Link>
-                                            <Link
-                                                to="/items"
-                                                onClick={() => setAvatarOpen(false)}
-                                                className="block px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
-                                            >
-                                                Items
-                                            </Link>
-                                            <Link
-                                                to="/chat"
-                                                onClick={() => setAvatarOpen(false)}
-                                                className="block px-4 py-2.5 text-sm text-gray-700 transition hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/60"
-                                            >
-                                                Chat
-                                            </Link>
                                             <button
                                                 type="button"
                                                 onClick={handleLogout}
-                                                className="w-full border-t border-gray-100 px-4 py-2.5 text-left text-sm text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700/60"
+                                                className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-gray-50 dark:hover:bg-gray-700/60"
                                             >
-                                                Sign out
+                                                <LogoutIcon className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                                                <span>
+                                                    <span className="block text-sm font-semibold text-red-600">Logout</span>
+                                                    <span className="block text-xs text-gray-500 dark:text-gray-400">End this session</span>
+                                                </span>
                                             </button>
+                                            <Link
+                                                to="/account"
+                                                onClick={() => setAvatarOpen(false)}
+                                                className="flex items-start gap-3 border-t border-gray-100 px-4 py-3 transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/60"
+                                            >
+                                                <UserIcon className="mt-0.5 h-4 w-4 shrink-0 text-gray-500 dark:text-gray-300" />
+                                                <span>
+                                                    <span className="block text-sm font-semibold text-gray-900 dark:text-white">Account</span>
+                                                    <span className="block text-xs text-gray-500 dark:text-gray-400">Edit your information</span>
+                                                </span>
+                                            </Link>
+                                            <Link
+                                                to="/about"
+                                                onClick={() => setAvatarOpen(false)}
+                                                className="flex items-start gap-3 px-4 py-3 transition hover:bg-gray-50 dark:hover:bg-gray-700/60"
+                                            >
+                                                <InfoIcon className="mt-0.5 h-4 w-4 shrink-0 text-gray-500 dark:text-gray-300" />
+                                                <span>
+                                                    <span className="block text-sm font-semibold text-gray-900 dark:text-white">About</span>
+                                                    <span className="block text-xs text-gray-500 dark:text-gray-400">About this site</span>
+                                                </span>
+                                            </Link>
                                         </div>
                                     )}
                                 </div>
