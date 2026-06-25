@@ -1,9 +1,12 @@
 import json
 import logging
+import time
+from collections import defaultdict, deque
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
+from django.conf import settings
 from openai import AsyncOpenAI
 from rest_framework.authtoken.models import Token
 
@@ -13,6 +16,12 @@ from .models import Message
 logger = logging.getLogger(__name__)
 MAX_MESSAGE_LENGTH = 2000
 AI_FAILURE_RESPONSE = "Sorry, I couldn't process that AI request right now."
+AI_UNAVAILABLE_RESPONSE = "Sorry, AI is unavailable right now. Please try again later."
+AI_RATE_LIMIT_RESPONSE = (
+    "Sorry, you are sending AI requests too quickly. Please try again soon."
+)
+AI_RATE_LIMIT_WINDOW_SECONDS = 60
+AI_REQUEST_TIMESTAMPS = defaultdict(deque)
 
 
 @database_sync_to_async
@@ -42,6 +51,19 @@ def validate_message(data):
         return None, f"Message cannot exceed {MAX_MESSAGE_LENGTH} characters."
 
     return message, None
+
+
+def is_ai_rate_limited(user_id):
+    now = time.monotonic()
+    timestamps = AI_REQUEST_TIMESTAMPS[user_id]
+    while timestamps and now - timestamps[0] >= AI_RATE_LIMIT_WINDOW_SECONDS:
+        timestamps.popleft()
+
+    if len(timestamps) >= settings.OPENAI_CHAT_RATE_LIMIT_PER_MINUTE:
+        return True
+
+    timestamps.append(now)
+    return False
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -100,20 +122,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message.lower().startswith("/ai "):
             user_query = message[4:].strip()
 
-            try:
-                client = AsyncOpenAI()
-                response = await client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": user_query},
-                    ],
-                    max_tokens=150,
-                )
-                ai_response = response.choices[0].message.content.strip()
-            except Exception:
-                logger.exception("OpenAI chat completion failed")
-                ai_response = AI_FAILURE_RESPONSE
+            if is_ai_rate_limited(user.id):
+                ai_response = AI_RATE_LIMIT_RESPONSE
+            elif not settings.OPENAI_API_KEY:
+                ai_response = AI_UNAVAILABLE_RESPONSE
+            else:
+                try:
+                    client = AsyncOpenAI(timeout=settings.OPENAI_CHAT_TIMEOUT_SECONDS)
+                    response = await client.chat.completions.create(
+                        model=settings.OPENAI_CHAT_MODEL,
+                        messages=[
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": user_query},
+                        ],
+                        max_tokens=settings.OPENAI_CHAT_MAX_TOKENS,
+                    )
+                    ai_response = response.choices[0].message.content.strip()
+                except Exception:
+                    logger.exception("OpenAI chat completion failed")
+                    ai_response = AI_FAILURE_RESPONSE
 
             ai_message = f"AI: {ai_response}"
             await save_message(user, self.room_name, ai_message)

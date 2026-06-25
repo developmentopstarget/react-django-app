@@ -22,6 +22,12 @@ if not SECRET_KEY:
         raise ImproperlyConfigured("SECRET_KEY environment variable must be set in production.")
     SECRET_KEY = "dev-only-fallback-not-safe-for-production"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+OPENAI_CHAT_MAX_TOKENS = int(os.getenv("OPENAI_CHAT_MAX_TOKENS", "150"))
+OPENAI_CHAT_TIMEOUT_SECONDS = int(os.getenv("OPENAI_CHAT_TIMEOUT_SECONDS", "10"))
+OPENAI_CHAT_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("OPENAI_CHAT_RATE_LIMIT_PER_MINUTE", "5")
+)
 
 ALLOWED_HOSTS = csv_env(
     "ALLOWED_HOSTS",

@@ -9,7 +9,13 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from .consumers import AI_FAILURE_RESPONSE, MAX_MESSAGE_LENGTH
+from .consumers import (
+    AI_FAILURE_RESPONSE,
+    AI_RATE_LIMIT_RESPONSE,
+    AI_REQUEST_TIMESTAMPS,
+    AI_UNAVAILABLE_RESPONSE,
+    MAX_MESSAGE_LENGTH,
+)
 from .models import Message
 from .routing import websocket_urlpatterns
 
@@ -101,6 +107,10 @@ class ChatHistoryViewTests(APITestCase):
 
 @override_settings(CHANNEL_LAYERS=TEST_CHANNEL_LAYERS)
 class ChatWebSocketConsumerTests(APITestCase):
+    def tearDown(self):
+        AI_REQUEST_TIMESTAMPS.clear()
+        super().tearDown()
+
     def _application(self):
         return URLRouter(websocket_urlpatterns)
 
@@ -212,6 +222,7 @@ class ChatWebSocketConsumerTests(APITestCase):
         self.assertEqual(Message.objects.count(), 0)
 
     @patch("chat.consumers.AsyncOpenAI")
+    @override_settings(OPENAI_API_KEY="test-key")
     def test_websocket_ai_failure_saves_fallback_message(self, mock_openai):
         user = User.objects.create_user(
             username="alice",
@@ -239,6 +250,118 @@ class ChatWebSocketConsumerTests(APITestCase):
         self.assertEqual(messages[0].content, "/ai hello")
         self.assertTrue(messages[1].content.startswith("AI: "))
         self.assertIn(AI_FAILURE_RESPONSE, messages[1].content)
+
+    @patch("chat.consumers.AsyncOpenAI")
+    @override_settings(
+        OPENAI_API_KEY="test-key",
+        OPENAI_CHAT_MODEL="test-model",
+        OPENAI_CHAT_MAX_TOKENS=42,
+        OPENAI_CHAT_TIMEOUT_SECONDS=3,
+    )
+    def test_websocket_ai_uses_configured_openai_settings(self, mock_openai):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+        mock_message = MagicMock()
+        mock_message.content = "configured response"
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai.return_value = mock_client
+
+        responses = async_to_sync(self._send_authenticated_message_and_receive_count)(
+            user.id,
+            token.key,
+            {"message": "/ai hello"},
+            2,
+        )
+
+        self.assertEqual(responses[1], {"message": "AI: configured response"})
+        mock_openai.assert_called_once_with(timeout=3)
+        mock_client.chat.completions.create.assert_awaited_once()
+        call_kwargs = mock_client.chat.completions.create.await_args.kwargs
+        self.assertEqual(call_kwargs["model"], "test-model")
+        self.assertEqual(call_kwargs["max_tokens"], 42)
+        self.assertEqual(call_kwargs["messages"][1]["content"], "hello")
+
+    @patch("chat.consumers.AsyncOpenAI")
+    @override_settings(OPENAI_API_KEY="")
+    def test_websocket_ai_missing_api_key_skips_openai_and_saves_unavailable_message(
+        self,
+        mock_openai,
+    ):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+
+        responses = async_to_sync(self._send_authenticated_message_and_receive_count)(
+            user.id,
+            token.key,
+            {"message": "/ai hello"},
+            2,
+        )
+
+        self.assertEqual(responses[0], {"message": "alice: /ai hello"})
+        self.assertEqual(responses[1], {"message": f"AI: {AI_UNAVAILABLE_RESPONSE}"})
+        mock_openai.assert_not_called()
+
+        messages = list(Message.objects.order_by("id"))
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0].content, "/ai hello")
+        self.assertEqual(messages[1].content, f"AI: {AI_UNAVAILABLE_RESPONSE}")
+
+    @patch("chat.consumers.AsyncOpenAI")
+    @override_settings(OPENAI_API_KEY="test-key", OPENAI_CHAT_RATE_LIMIT_PER_MINUTE=1)
+    def test_websocket_ai_rate_limit_skips_openai_and_saves_rate_limit_message(
+        self,
+        mock_openai,
+    ):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+        mock_message = MagicMock()
+        mock_message.content = "first response"
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai.return_value = mock_client
+
+        first_responses = async_to_sync(self._send_authenticated_message_and_receive_count)(
+            user.id,
+            token.key,
+            {"message": "/ai first"},
+            2,
+        )
+        second_responses = async_to_sync(self._send_authenticated_message_and_receive_count)(
+            user.id,
+            token.key,
+            {"message": "/ai second"},
+            2,
+        )
+
+        self.assertEqual(first_responses[1], {"message": "AI: first response"})
+        self.assertEqual(second_responses[0], {"message": "alice: /ai second"})
+        self.assertEqual(second_responses[1], {"message": f"AI: {AI_RATE_LIMIT_RESPONSE}"})
+        mock_client.chat.completions.create.assert_awaited_once()
+
+        messages = list(Message.objects.order_by("id"))
+        self.assertEqual(len(messages), 4)
+        self.assertEqual(messages[3].content, f"AI: {AI_RATE_LIMIT_RESPONSE}")
 
     async def _authenticate(self, user_id, token_key):
         communicator = WebsocketCommunicator(
