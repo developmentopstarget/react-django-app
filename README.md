@@ -217,12 +217,17 @@ Required backend environment variables:
 DJANGO_ENV=production
 DEBUG=False
 SECRET_KEY=<render-secret-key>
-ALLOWED_HOSTS=rda-backend-62d0.onrender.com
+ALLOWED_HOSTS=rda-backend-62d0.onrender.com,<vercel-frontend-host>
 CORS_ALLOWED_ORIGINS=https://rda-frontend-zmln.onrender.com
 DATABASE_URL=<render-postgres-url>
 REDIS_URL=<render-redis-url>
 OPENAI_API_KEY=<optional-openai-api-key>
 ~~~
+
+For a Vercel frontend, `ALLOWED_HOSTS` must include both hosts without protocol:
+
+- the Render backend host, for example `rda-backend-62d0.onrender.com`
+- the Vercel frontend host, for example `<project-name>.vercel.app`
 
 Do not commit production secrets to Git.
 
@@ -249,6 +254,19 @@ Frontend environment variables:
 VITE_API_BASE_URL=https://rda-backend-62d0.onrender.com
 VITE_WS_BASE_URL=wss://rda-backend-62d0.onrender.com
 ~~~
+
+### Frontend Vercel static site
+
+For Vercel, set the project root directory to `frontend`.
+
+Required Vercel environment variables:
+
+~~~env
+VITE_API_BASE_URL=https://<render-backend-host>
+VITE_WS_BASE_URL=wss://<render-backend-host>
+~~~
+
+`frontend/vercel.json` rewrites all routes to `/` so React BrowserRouter routes are served by `index.html`.
 
 ### Post-deploy verification
 

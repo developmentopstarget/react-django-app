@@ -7,7 +7,7 @@ Concise checklist for deploying the current React + Django Channels app with a R
 - Create a Render Web Service for the Django backend.
 - Runtime: Docker.
 - Dockerfile: `backend/Dockerfile`.
-- TODO: Confirm Render root directory and build context. If the root is `backend`, use Dockerfile path `Dockerfile`. If the root is the repo root, use Dockerfile path `backend/Dockerfile`.
+- Docker root directory/build context: `backend` when using `backend/Dockerfile`.
 - Container start command is handled by `backend/entrypoint.sh`:
 
 ```bash
@@ -79,8 +79,9 @@ curl https://<render-backend-host>/api/health/
 
 ## 5. Vercel frontend
 
-- Create a Vercel project with root directory `frontend`.
+- Create a Vercel project with project root directory `frontend`.
 - Framework preset: Vite.
+- SPA routing for React BrowserRouter routes is handled by `frontend/vercel.json`.
 - Install command:
 
 ```bash
@@ -121,8 +122,8 @@ Do not rely on the production browser-origin fallback for Vercel + Render. Witho
 ## 7. CORS, hosts, and WebSocket risks
 
 - `ALLOWED_HOSTS` must include the Render backend host without protocol.
-- `ALLOWED_HOSTS` should include the Vercel frontend host without protocol because WebSockets use `AllowedHostsOriginValidator` in `backend/config/asgi.py`.
-- `CORS_ALLOWED_ORIGINS` must include the Vercel frontend origin with protocol.
+- `ALLOWED_HOSTS` must include the Vercel frontend host without protocol because WebSockets use `AllowedHostsOriginValidator` in `backend/config/asgi.py`.
+- `CORS_ALLOWED_ORIGINS` must include the Vercel frontend origin with `https://`.
 - `CSRF_TRUSTED_ORIGINS` is currently copied from `CORS_ALLOWED_ORIGINS`.
 - Production WebSocket URL must use `wss://`, not `ws://`.
 - TODO: Decide how Vercel preview deployment origins will be handled. Add explicit preview origins or implement a controlled preview-origin policy.
