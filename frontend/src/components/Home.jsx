@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
+import HomeCardStack from './HomeCardStack';
 
 const features = [
     {
@@ -91,39 +92,7 @@ const Home = () => {
                             </div>
                         </div>
 
-                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-900">
-                            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                                App flow
-                            </p>
-                            <div className="mt-4 space-y-3">
-                                <div className="rounded-md bg-white p-4 shadow-sm dark:bg-gray-800">
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        Sign in
-                                    </p>
-                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                        Access protected pages through the current auth setup.
-                                    </p>
-                                </div>
-
-                                <div className="rounded-md bg-white p-4 shadow-sm dark:bg-gray-800">
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        Manage items
-                                    </p>
-                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                        Work with records owned by the active account.
-                                    </p>
-                                </div>
-
-                                <div className="rounded-md bg-white p-4 shadow-sm dark:bg-gray-800">
-                                    <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        Open chat
-                                    </p>
-                                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                        Continue real-time conversations with saved history.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <HomeCardStack />
                     </div>
                 </section>
 
