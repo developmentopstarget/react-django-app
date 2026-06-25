@@ -1,56 +1,46 @@
-# Vercel Frontend Migration / Alternative Deployment Checklist
+# Codex Deployment Checklist: Render Backend + Vercel Frontend
 
-This checklist covers a Vercel frontend with a Render backend. It is a migration/alternative to the current `README.md` path, which documents a Render frontend deployment.
+Concise checklist for deploying the current React + Django Channels app with a Render backend and Vercel frontend.
 
-## 1. Render backend service setup
+## 1. Render backend
 
-- Create a Render **Web Service** for the Django backend.
-- Runtime: **Docker**.
-- TODO: Confirm exact Render **Root Directory**.
-- TODO: Confirm exact Render **Dockerfile Path**.
-- TODO: Confirm exact Render **Build Context**.
-- If Render root directory/build context is `backend`, Dockerfile path should be `Dockerfile`.
-- If Render root directory is the repo root, Dockerfile path should be `backend/Dockerfile`, and the build context must still match the Dockerfile assumptions.
-- The Docker image installs `backend/requirements.txt`, runs `python manage.py collectstatic --noinput`, and uses `backend/entrypoint.sh`.
-- Start command is already handled by the Docker `CMD`:
-
-```bash
-/app/entrypoint.sh
-```
-
-- `entrypoint.sh` runs migrations, then starts Daphne:
+- Create a Render Web Service for the Django backend.
+- Runtime: Docker.
+- Dockerfile: `backend/Dockerfile`.
+- TODO: Confirm Render root directory and build context. If the root is `backend`, use Dockerfile path `Dockerfile`. If the root is the repo root, use Dockerfile path `backend/Dockerfile`.
+- Container start command is handled by `backend/entrypoint.sh`:
 
 ```bash
 python manage.py migrate --noinput
 daphne -b 0.0.0.0 -p "${PORT:-8000}" config.asgi:application
 ```
 
-- TODO: Set the Render backend service name and final backend URL.
+## 2. Backend environment variables
 
-## 2. Render PostgreSQL and Redis requirements
-
-- Create a Render PostgreSQL database for Django.
-- Set backend `DATABASE_URL` to the Render PostgreSQL internal connection URL.
-- Create a Render Redis / Key Value instance for Django Channels.
-- Set backend `REDIS_URL` to the Render Redis internal connection URL.
-- Production will fail at startup unless either `DATABASE_URL` or `DB_HOST` is set.
-
-## 3. Required backend environment variables
-
-Set these on the Render backend service:
+Required on Render:
 
 ```env
 DJANGO_ENV=production
 DEBUG=False
-SECRET_KEY=<strong-render-secret>
+SECRET_KEY=<strong-secret>
 ALLOWED_HOSTS=<render-backend-host>,<vercel-frontend-host>
-CORS_ALLOWED_ORIGINS=<vercel-frontend-origin>
+CORS_ALLOWED_ORIGINS=https://<vercel-frontend-host>
 DATABASE_URL=<render-postgres-internal-url>
 REDIS_URL=<render-redis-internal-url>
-OPENAI_API_KEY=<openai-api-key-or-empty-if-ai-chat-is-not-used>
 ```
 
-Alternative database envs supported by the repo, if not using `DATABASE_URL`:
+Optional:
+
+```env
+OPENAI_API_KEY=<openai-api-key>
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_CHAT_MAX_TOKENS=150
+OPENAI_CHAT_TIMEOUT_SECONDS=10
+OPENAI_CHAT_RATE_LIMIT_PER_MINUTE=5
+CHAT_WEBSOCKET_AUTH_TIMEOUT_SECONDS=10
+```
+
+Alternative database variables supported if not using `DATABASE_URL`:
 
 ```env
 DB_NAME=<database-name>
@@ -60,23 +50,13 @@ DB_HOST=<database-host>
 DB_PORT=5432
 ```
 
-- `OPENAI_API_KEY` is not required for Django startup, but `/ai` chat will fail or return an error without it.
+## 3. Backend commands
 
-## 4. Backend and frontend verification commands
-
-Run backend tests before deploy:
+Run tests before deploy:
 
 ```bash
 cd backend
 python manage.py test
-```
-
-Run frontend checks before deploy:
-
-```bash
-cd frontend
-npm run lint
-npm run build
 ```
 
 Optional local Docker build check:
@@ -85,23 +65,22 @@ Optional local Docker build check:
 docker build -t react-django-backend ./backend
 ```
 
-Production start command used by the container:
-
-```bash
-/app/entrypoint.sh
-```
-
-Health check endpoint:
+Health check after deploy:
 
 ```bash
 curl https://<render-backend-host>/api/health/
 ```
 
-## 5. Vercel frontend setup
+## 4. Database and Redis
 
-- Create a Vercel project for the frontend.
-- Root directory: `frontend`.
-- Framework preset: **Vite**.
+- PostgreSQL is required in production. `DJANGO_ENV=production` fails startup unless `DATABASE_URL` or `DB_HOST` is set.
+- Redis is required in production. `DJANGO_ENV=production` fails startup unless `REDIS_URL` is set.
+- Django Channels uses `channels_redis.pubsub.RedisPubSubChannelLayer`, so the Render backend must be able to reach the Redis internal URL.
+
+## 5. Vercel frontend
+
+- Create a Vercel project with root directory `frontend`.
+- Framework preset: Vite.
 - Install command:
 
 ```bash
@@ -120,35 +99,37 @@ npm run build
 dist
 ```
 
-- TODO: Set the final Vercel production domain.
+- Optional pre-deploy lint/build check:
 
-## 6. Required frontend environment variables
+```bash
+cd frontend
+npm run lint
+npm run build
+```
 
-Set these in Vercel:
+## 6. Frontend environment variables
+
+Required on Vercel:
 
 ```env
 VITE_API_BASE_URL=https://<render-backend-host>
 VITE_WS_BASE_URL=wss://<render-backend-host>
 ```
 
-Notes:
+Do not rely on the production browser-origin fallback for Vercel + Render. Without these variables, the frontend will target the Vercel origin instead of the Render backend.
 
-- `VITE_API_URL` is also accepted by the code as a fallback, but `VITE_API_BASE_URL` is the clearer repo convention.
-- For Vercel + Render, do not rely on the production default browser origin, because the backend is on a separate Render origin.
-
-## 7. CORS, ALLOWED_HOSTS, and WebSocket origin risks
+## 7. CORS, hosts, and WebSocket risks
 
 - `ALLOWED_HOSTS` must include the Render backend host without protocol.
-- `ALLOWED_HOSTS` must also include the Vercel frontend host without protocol because `backend/config/asgi.py` uses `AllowedHostsOriginValidator` for WebSockets.
-- `CORS_ALLOWED_ORIGINS` must include the Vercel frontend origin with protocol, for example `https://<vercel-domain>`.
-- `CSRF_TRUSTED_ORIGINS` is set from `CORS_ALLOWED_ORIGINS` in `backend/config/settings.py`.
-- WebSockets use `AllowedHostsOriginValidator`, so failed WebSocket connections may mean the request origin or backend host is not allowed.
-- Frontend WebSocket URL must use `wss://` in production, not `ws://`.
-- If adding preview deployments, TODO: decide whether to add each preview origin explicitly or implement a safer preview-origin policy.
+- `ALLOWED_HOSTS` should include the Vercel frontend host without protocol because WebSockets use `AllowedHostsOriginValidator` in `backend/config/asgi.py`.
+- `CORS_ALLOWED_ORIGINS` must include the Vercel frontend origin with protocol.
+- `CSRF_TRUSTED_ORIGINS` is currently copied from `CORS_ALLOWED_ORIGINS`.
+- Production WebSocket URL must use `wss://`, not `ws://`.
+- TODO: Decide how Vercel preview deployment origins will be handled. Add explicit preview origins or implement a controlled preview-origin policy.
 
-## 8. Files and directories that must stay uncommitted
+## 8. Do not commit
 
-Do not commit secrets, generated files, local dependencies, or agent-local files:
+Do not commit secrets, generated files, local dependencies, or local agent files:
 
 ```text
 .env
@@ -160,48 +141,23 @@ dist/
 frontend/dist/
 build/
 backend/staticfiles/
-staticfiles/
 backend/db.sqlite3
 *.sqlite3
 __pycache__/
 *.pyc
 backend/.venv/
-backend/.venv.old/
 .claude/
-cookies.txt
 .DS_Store
 ```
 
-Keep example env files commit-safe only:
+## 9. Smoke test
 
-```text
-backend/.env.example
-frontend/.env.example
-```
-
-## 9. Final smoke-test checklist
-
-- Backend deploy finishes without migration errors.
-- Backend health endpoint returns `{"status":"ok"}`:
-
-```bash
-curl https://<render-backend-host>/api/health/
-```
-
+- Backend deploy completes migrations.
+- `curl https://<render-backend-host>/api/health/` returns healthy output.
 - Vercel frontend loads over HTTPS.
-- Register a new user.
-- Log in and confirm the token-based auth flow works.
-- Open dashboard/items and confirm API calls reach Render without CORS errors.
-- Open chat and confirm WebSocket status reaches `Open`.
-- Send a chat message and confirm it persists in chat history after refresh.
-- If `OPENAI_API_KEY` is configured, send a `/ai <message>` chat command and confirm an AI response.
-- Check browser console for CORS, mixed-content, `403`, `401`, or WebSocket origin errors.
-- Check Render logs for Django startup, migration, database, Redis, and Daphne errors.
-
-## 10. Follow-up tasks
-
-- Production Django security hardening.
-- Explicit OpenAI feature decision.
-- Possible `render.yaml`.
-- Possible `vercel.json`.
-- README alignment after the deployment target is finalized.
+- Register and log in.
+- Confirm authenticated API calls reach Render without CORS errors.
+- Open chat and confirm WebSocket connects.
+- Send a chat message and confirm it persists after refresh.
+- If `OPENAI_API_KEY` is set, test `/ai <message>`.
+- Check Render logs for database, Redis, Daphne, migration, CORS, and WebSocket origin errors.
