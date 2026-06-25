@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
+from .consumers import MAX_MESSAGE_LENGTH
 from .models import Message
 from .routing import websocket_urlpatterns
 
@@ -155,6 +156,58 @@ class ChatWebSocketConsumerTests(APITestCase):
         self.assertEqual(message.user, user)
         self.assertEqual(message.room_name, f"user_{user.id}")
         self.assertEqual(message.content, "hello")
+
+    def test_websocket_rejects_empty_message_without_saving(self):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+
+        response = async_to_sync(self._send_authenticated_message)(
+            user.id,
+            token.key,
+            {"message": "   "},
+        )
+
+        self.assertEqual(response, {"type": "error", "error": "Message cannot be empty."})
+        self.assertEqual(Message.objects.count(), 0)
+
+    def test_websocket_rejects_non_string_message_without_saving(self):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+
+        response = async_to_sync(self._send_authenticated_message)(
+            user.id,
+            token.key,
+            {"message": 123},
+        )
+
+        self.assertEqual(response, {"type": "error", "error": "Message must be a string."})
+        self.assertEqual(Message.objects.count(), 0)
+
+    def test_websocket_rejects_message_over_max_length_without_saving(self):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+
+        response = async_to_sync(self._send_authenticated_message)(
+            user.id,
+            token.key,
+            {"message": "a" * (MAX_MESSAGE_LENGTH + 1)},
+        )
+
+        self.assertEqual(response["type"], "error")
+        self.assertIn("2000", response["error"])
+        self.assertEqual(Message.objects.count(), 0)
 
     async def _authenticate(self, user_id, token_key):
         communicator = WebsocketCommunicator(
