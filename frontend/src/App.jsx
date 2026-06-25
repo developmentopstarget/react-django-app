@@ -10,6 +10,8 @@ import Dashboard from './components/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import Chat from './components/Chat';
 import Items from './components/Items';
+import Account from './components/Account';
+import About from './components/About';
 
 export default function App() {
     return (
@@ -21,6 +23,7 @@ export default function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/about" element={<About />} />
 
                     <Route
                         path="/dashboard"
@@ -45,6 +48,15 @@ export default function App() {
                         element={
                             <PrivateRoute>
                                 <Items />
+                            </PrivateRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/account"
+                        element={
+                            <PrivateRoute>
+                                <Account />
                             </PrivateRoute>
                         }
                     />
