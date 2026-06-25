@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import time
@@ -71,9 +72,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_{self.room_name}"
         self.authenticated = False
+        self.auth_timeout_task = None
         await self.accept()
+        self.auth_timeout_task = asyncio.create_task(self._close_if_auth_times_out())
 
     async def disconnect(self, close_code):
+        self._cancel_auth_timeout()
         if self.authenticated:
             await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
@@ -102,6 +106,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
             self.scope["user"] = user
             self.authenticated = True
+            self._cancel_auth_timeout()
             await self.channel_layer.group_add(self.room_group_name, self.channel_name)
             await self.send(text_data=json.dumps({"type": "auth.success"}))
             return
@@ -152,3 +157,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({"message": event["message"]}))
+
+    async def _close_if_auth_times_out(self):
+        try:
+            await asyncio.sleep(settings.CHAT_WEBSOCKET_AUTH_TIMEOUT_SECONDS)
+            if not self.authenticated:
+                await self.close(code=4001)
+        except asyncio.CancelledError:
+            pass
+
+    def _cancel_auth_timeout(self):
+        auth_timeout_task = getattr(self, "auth_timeout_task", None)
+        if auth_timeout_task and not auth_timeout_task.done():
+            auth_timeout_task.cancel()

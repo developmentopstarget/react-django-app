@@ -1,3 +1,4 @@
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from asgiref.sync import async_to_sync
@@ -168,6 +169,43 @@ class ChatWebSocketConsumerTests(APITestCase):
         self.assertEqual(message.user, user)
         self.assertEqual(message.room_name, f"user_{user.id}")
         self.assertEqual(message.content, "hello")
+
+    @override_settings(CHAT_WEBSOCKET_AUTH_TIMEOUT_SECONDS=0.05)
+    def test_websocket_closes_idle_unauthenticated_connection_after_auth_timeout(self):
+        close_code = async_to_sync(self._connect_and_wait_for_close_code)("/ws/chat/user_1/")
+
+        self.assertEqual(close_code, 4001)
+
+    @override_settings(CHAT_WEBSOCKET_AUTH_TIMEOUT_SECONDS=0.05)
+    def test_websocket_auth_timeout_is_cancelled_after_successful_auth(self):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+
+        response = async_to_sync(self._authenticate_wait_then_send_message)(
+            user.id,
+            token.key,
+            {"message": "hello"},
+            0.1,
+        )
+
+        self.assertEqual(response, {"message": "alice: hello"})
+        message = Message.objects.get()
+        self.assertEqual(message.user, user)
+        self.assertEqual(message.room_name, f"user_{user.id}")
+        self.assertEqual(message.content, "hello")
+
+    def test_websocket_rejects_message_before_auth(self):
+        close_code = async_to_sync(self._send_unauthenticated_message_and_get_close_code)(
+            "/ws/chat/user_1/",
+            {"message": "hello"},
+        )
+
+        self.assertEqual(close_code, 4001)
+        self.assertEqual(Message.objects.count(), 0)
 
     def test_websocket_rejects_empty_message_without_saving(self):
         user = User.objects.create_user(
@@ -401,6 +439,54 @@ class ChatWebSocketConsumerTests(APITestCase):
 
             await communicator.send_json_to(message)
             return await communicator.receive_json_from()
+        finally:
+            await communicator.disconnect()
+
+    async def _connect_and_wait_for_close_code(self, path):
+        communicator = WebsocketCommunicator(self._application(), path)
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+
+        try:
+            response = await communicator.receive_output()
+            return response["code"]
+        finally:
+            await communicator.disconnect()
+
+    async def _authenticate_wait_then_send_message(
+        self,
+        user_id,
+        token_key,
+        message,
+        wait_seconds,
+    ):
+        communicator = WebsocketCommunicator(
+            self._application(),
+            f"/ws/chat/user_{user_id}/",
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+
+        try:
+            await communicator.send_json_to({"type": "auth", "token": token_key})
+            auth_response = await communicator.receive_json_from()
+            self.assertEqual(auth_response, {"type": "auth.success"})
+
+            await asyncio.sleep(wait_seconds)
+            await communicator.send_json_to(message)
+            return await communicator.receive_json_from()
+        finally:
+            await communicator.disconnect()
+
+    async def _send_unauthenticated_message_and_get_close_code(self, path, message):
+        communicator = WebsocketCommunicator(self._application(), path)
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+
+        try:
+            await communicator.send_json_to(message)
+            response = await communicator.receive_output()
+            return response["code"]
         finally:
             await communicator.disconnect()
 
