@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from asgiref.sync import async_to_sync
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
@@ -7,7 +9,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
-from .consumers import MAX_MESSAGE_LENGTH
+from .consumers import AI_FAILURE_RESPONSE, MAX_MESSAGE_LENGTH
 from .models import Message
 from .routing import websocket_urlpatterns
 
@@ -209,6 +211,35 @@ class ChatWebSocketConsumerTests(APITestCase):
         self.assertIn("2000", response["error"])
         self.assertEqual(Message.objects.count(), 0)
 
+    @patch("chat.consumers.AsyncOpenAI")
+    def test_websocket_ai_failure_saves_fallback_message(self, mock_openai):
+        user = User.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="strong-pass-123",
+        )
+        token = Token.objects.create(user=user)
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("boom"))
+        mock_openai.return_value = mock_client
+
+        responses = async_to_sync(self._send_authenticated_message_and_receive_count)(
+            user.id,
+            token.key,
+            {"message": "/ai hello"},
+            2,
+        )
+
+        self.assertEqual(responses[0], {"message": "alice: /ai hello"})
+        self.assertTrue(responses[1]["message"].startswith("AI: "))
+        self.assertIn(AI_FAILURE_RESPONSE, responses[1]["message"])
+
+        messages = list(Message.objects.order_by("id"))
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0].content, "/ai hello")
+        self.assertTrue(messages[1].content.startswith("AI: "))
+        self.assertIn(AI_FAILURE_RESPONSE, messages[1].content)
+
     async def _authenticate(self, user_id, token_key):
         communicator = WebsocketCommunicator(
             self._application(),
@@ -247,5 +278,29 @@ class ChatWebSocketConsumerTests(APITestCase):
 
             await communicator.send_json_to(message)
             return await communicator.receive_json_from()
+        finally:
+            await communicator.disconnect()
+
+    async def _send_authenticated_message_and_receive_count(
+        self,
+        user_id,
+        token_key,
+        message,
+        count,
+    ):
+        communicator = WebsocketCommunicator(
+            self._application(),
+            f"/ws/chat/user_{user_id}/",
+        )
+        connected, _ = await communicator.connect()
+        self.assertTrue(connected)
+
+        try:
+            await communicator.send_json_to({"type": "auth", "token": token_key})
+            auth_response = await communicator.receive_json_from()
+            self.assertEqual(auth_response, {"type": "auth.success"})
+
+            await communicator.send_json_to(message)
+            return [await communicator.receive_json_from() for _ in range(count)]
         finally:
             await communicator.disconnect()
