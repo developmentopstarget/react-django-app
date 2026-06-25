@@ -151,7 +151,6 @@ function fetchList({ search } = {}) {
               key={i.id}
               item={i}
               onDelete={() => remove(i.id)}
-              onLocalUpdate={upsertLocal}
               onCommitRename={(val) => commitRename(i.id, val)}
             />
           ))}
@@ -161,7 +160,7 @@ function fetchList({ search } = {}) {
   );
 }
 
-function ItemRow({ item, onDelete, onLocalUpdate, onCommitRename }) {
+function ItemRow({ item, onDelete, onCommitRename }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(item.name || "");
   const inputRef = useRef(null);

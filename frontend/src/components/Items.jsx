@@ -40,19 +40,17 @@ export default function Items() {
 
             setItems(response.data);
             setLastRefreshedAt(new Date());
-        } catch (fetchError) {
+        } catch {
             if (!mountedRef.current) {
                 return;
             }
 
             setError('Unable to load items.');
         } finally {
-            if (!mountedRef.current) {
-                return;
+            if (mountedRef.current) {
+                setLoading(false);
+                setRefreshing(false);
             }
-
-            setLoading(false);
-            setRefreshing(false);
         }
     }, []);
 
@@ -113,7 +111,7 @@ export default function Items() {
             setName('');
             setLastRefreshedAt(new Date());
             window.dispatchEvent(new CustomEvent('rda:notifications-changed'));
-        } catch (createRequestError) {
+        } catch {
             setCreateError('Unable to create item.');
         } finally {
             setSubmitting(false);
@@ -155,7 +153,7 @@ export default function Items() {
             setEditingId(null);
             setEditName('');
             setLastRefreshedAt(new Date());
-        } catch (editRequestError) {
+        } catch {
             setEditError('Unable to update item.');
         } finally {
             setEditSubmitting(false);
@@ -170,7 +168,7 @@ export default function Items() {
             await axios.delete(`${API_BASE_URL}/api/items/${itemId}/`);
             setItems((currentItems) => currentItems.filter((item) => item.id !== itemId));
             setLastRefreshedAt(new Date());
-        } catch (deleteRequestError) {
+        } catch {
             setDeleteError('Unable to delete item.');
         } finally {
             setDeletingId(null);
