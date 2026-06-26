@@ -155,7 +155,7 @@ const Chat = () => {
     }
 
     return (
-        <div className="flex h-[calc(100vh-65px)] flex-col bg-slate-100 text-slate-900 dark:bg-gray-950 dark:text-gray-100">
+        <div className="flex h-[100dvh] flex-col bg-slate-100 text-slate-900 md:h-[calc(100vh-65px)] dark:bg-gray-950 dark:text-gray-100">
             <div className="border-b border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:px-6">
                 <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import HomeCardStack from './HomeCardStack';
 
@@ -73,13 +73,6 @@ const serviceLinks = [
     { label: 'About', to: '/about', icon: 'info' },
 ];
 
-const bottomNavLinks = [
-    { label: 'Home', to: '/', icon: 'home', end: true },
-    { label: 'Items', to: '/items', icon: 'box' },
-    { label: 'Chat', to: '/chat', icon: 'chat' },
-    { label: 'Dashboard', to: '/dashboard', icon: 'grid' },
-];
-
 function AppIcon({ name, className = '' }) {
     const iconProps = {
         className,
@@ -131,14 +124,6 @@ function AppIcon({ name, className = '' }) {
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 16v-4" />
                     <path d="M12 8h.01" />
-                </svg>
-            );
-        case 'home':
-            return (
-                <svg {...iconProps}>
-                    <path d="m3 10 9-7 9 7" />
-                    <path d="M5 10v10h14V10" />
-                    <path d="M9 20v-6h6v6" />
                 </svg>
             );
         case 'search':
@@ -315,33 +300,6 @@ function MobileHomeSections() {
     );
 }
 
-function MobileBottomNav() {
-    return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-3 py-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden dark:border-gray-700 dark:bg-gray-900/95">
-            <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-                {bottomNavLinks.map((link) => (
-                    <NavLink
-                        key={link.to}
-                        to={link.to}
-                        end={link.end}
-                        className={({ isActive }) =>
-                            [
-                                'flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition',
-                                isActive
-                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-200'
-                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
-                            ].join(' ')
-                        }
-                    >
-                        <AppIcon name={link.icon} className="h-5 w-5" />
-                        <span>{link.label}</span>
-                    </NavLink>
-                ))}
-            </div>
-        </nav>
-    );
-}
-
 const Home = () => {
     const { user } = useAuth();
 
@@ -448,8 +406,6 @@ const Home = () => {
                     <HomeCardStack />
                 </section>
             </div>
-
-            <MobileBottomNav />
         </main>
     );
 };

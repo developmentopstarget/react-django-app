@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import MobileAppShell from './components/MobileAppShell';
 import Home from './components/Home';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -61,6 +62,8 @@ export default function App() {
                         }
                     />
                 </Routes>
+
+                <MobileAppShell />
             </BrowserRouter>
         </AuthProvider>
     );
