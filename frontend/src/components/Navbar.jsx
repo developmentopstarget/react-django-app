@@ -374,7 +374,7 @@ const Navbar = () => {
               No overflow-x-hidden on header or nav — those clip absolute-positioned
               dropdown children. Horizontal overflow is handled by flex constraints.
             */}
-            <header className="relative z-50 w-full border-b bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <header className="relative z-50 hidden w-full border-b bg-white shadow-sm md:block dark:border-gray-700 dark:bg-gray-800">
                 <nav className="mx-auto w-full max-w-6xl px-3 py-3 sm:px-4">
                     <div className="flex w-full items-center justify-between gap-2">
 
