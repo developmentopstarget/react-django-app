@@ -184,7 +184,7 @@ const Chat = () => {
                 </div>
             )}
 
-            <div className="flex-grow overflow-auto px-4 py-5 sm:px-6">
+            <div className="flex-grow overflow-auto px-4 pb-24 pt-5 sm:px-6 md:pb-5">
                 <div className="mx-auto flex min-h-full w-full max-w-5xl flex-col">
                     {historyLoading && messages.length === 0 ? (
                         <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white/70 p-8 text-center text-slate-500 dark:border-gray-700 dark:bg-gray-900/60 dark:text-gray-400">
@@ -236,7 +236,7 @@ const Chat = () => {
                 </div>
             </div>
 
-            <div className="border-t border-slate-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 sm:px-6">
+            <div className="border-t border-slate-200 bg-white p-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] dark:border-gray-800 dark:bg-gray-900 sm:px-6 md:pb-4">
                 <form onSubmit={handleSendMessage} className="mx-auto flex w-full max-w-5xl gap-2">
                     <input
                         type="text"

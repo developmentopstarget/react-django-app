@@ -5,16 +5,8 @@ import { useAuth } from '../context/useAuth';
 const bottomNavLinks = [
     { label: 'Home', to: '/', icon: 'home', end: true },
     { label: 'Items', to: '/items', icon: 'box' },
+    { label: 'Dashboard', to: '/dashboard', icon: 'grid', primary: true },
     { label: 'Chat', to: '/chat', icon: 'chat' },
-    { label: 'Dashboard', to: '/dashboard', icon: 'grid' },
-];
-
-const servicesLinks = [
-    { label: 'Account', to: '/account', icon: 'user' },
-    { label: 'Items', to: '/items', icon: 'box' },
-    { label: 'Chat', to: '/chat', icon: 'chat' },
-    { label: 'Dashboard', to: '/dashboard', icon: 'grid' },
-    { label: 'About', to: '/about', icon: 'info' },
 ];
 
 function AppIcon({ name, className = '' }) {
@@ -70,22 +62,6 @@ function AppIcon({ name, className = '' }) {
                     <circle cx="12" cy="7" r="4" />
                 </svg>
             );
-        case 'info':
-            return (
-                <svg {...iconProps}>
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 16v-4" />
-                    <path d="M12 8h.01" />
-                </svg>
-            );
-        case 'services':
-            return (
-                <svg {...iconProps}>
-                    <path d="M4 7h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 17h16" />
-                </svg>
-            );
         case 'logout':
             return (
                 <svg {...iconProps}>
@@ -105,6 +81,22 @@ function getDisplayName(user) {
 
 function getAvatarInitial(user) {
     return getDisplayName(user).charAt(0).toUpperCase() || 'U';
+}
+
+function ProfileNavAvatar({ user, active = false }) {
+    const baseClass = active
+        ? 'bg-indigo-600 text-white ring-2 ring-indigo-200 dark:ring-indigo-800'
+        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300';
+
+    return (
+        <span className={`flex h-8 w-8 items-center justify-center rounded-full ${baseClass}`}>
+            {user ? (
+                <span className="text-xs font-bold">{getAvatarInitial(user)}</span>
+            ) : (
+                <AppIcon name="user" className="h-4 w-4" />
+            )}
+        </span>
+    );
 }
 
 function Sheet({ title, children, onClose }) {
@@ -140,30 +132,6 @@ function Sheet({ title, children, onClose }) {
                 </div>
             </section>
         </>
-    );
-}
-
-function ServicesSheet({ onClose }) {
-    return (
-        <Sheet title="Services" onClose={onClose}>
-            <div className="grid grid-cols-2 gap-3">
-                {servicesLinks.map((link) => (
-                    <Link
-                        key={link.to}
-                        to={link.to}
-                        onClick={onClose}
-                        className="flex min-h-20 items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-3 text-left transition hover:border-indigo-200 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-800 dark:hover:bg-indigo-950/30"
-                    >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-200">
-                            <AppIcon name={link.icon} className="h-5 w-5" />
-                        </span>
-                        <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-                            {link.label}
-                        </span>
-                    </Link>
-                ))}
-            </div>
-        </Sheet>
     );
 }
 
@@ -249,15 +217,8 @@ export default function MobileAppShell() {
         setOpenSheet(null);
     }, [location.pathname]);
 
-    if (location.pathname === '/chat') {
-        return null;
-    }
-
     return (
         <>
-            {openSheet === 'services' && (
-                <ServicesSheet onClose={() => setOpenSheet(null)} />
-            )}
             {openSheet === 'profile' && (
                 <ProfileSheet
                     user={user}
@@ -267,27 +228,8 @@ export default function MobileAppShell() {
             )}
 
             <div className="fixed inset-x-0 bottom-0 z-30 md:hidden">
-                <div className="mx-auto mb-2 flex max-w-md justify-end gap-2 px-3">
-                    <button
-                        type="button"
-                        onClick={() => setOpenSheet('services')}
-                        className="flex h-11 items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3 text-xs font-bold text-gray-700 shadow-lg backdrop-blur transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800"
-                    >
-                        <AppIcon name="services" className="h-4 w-4" />
-                        Services
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setOpenSheet('profile')}
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white shadow-lg transition hover:bg-indigo-700"
-                        aria-label="Open profile"
-                    >
-                        {user ? getAvatarInitial(user) : <AppIcon name="user" className="h-5 w-5" />}
-                    </button>
-                </div>
-
                 <nav className="border-t border-gray-200 bg-white/95 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
-                    <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+                    <div className="mx-auto grid max-w-md grid-cols-5 items-end gap-1">
                         {bottomNavLinks.map((link) => (
                             <NavLink
                                 key={link.to}
@@ -296,16 +238,39 @@ export default function MobileAppShell() {
                                 className={({ isActive }) =>
                                     [
                                         'flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition',
+                                        link.primary ? '-mt-5 min-h-16' : '',
                                         isActive
-                                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-200'
+                                            ? link.primary
+                                                ? 'text-indigo-700 dark:text-indigo-200'
+                                                : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-200'
                                             : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
                                     ].join(' ')
                                 }
                             >
-                                <AppIcon name={link.icon} className="h-5 w-5" />
+                                {link.primary ? (
+                                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 ring-4 ring-white dark:ring-gray-900">
+                                        <AppIcon name={link.icon} className="h-5 w-5" />
+                                    </span>
+                                ) : (
+                                    <AppIcon name={link.icon} className="h-5 w-5" />
+                                )}
                                 <span>{link.label}</span>
                             </NavLink>
                         ))}
+                        <button
+                            type="button"
+                            onClick={() => setOpenSheet('profile')}
+                            className={[
+                                'flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-semibold transition',
+                                openSheet === 'profile'
+                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-200'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
+                            ].join(' ')}
+                            aria-label="Open profile"
+                        >
+                            <ProfileNavAvatar user={user} active={openSheet === 'profile'} />
+                            <span>Profile</span>
+                        </button>
                     </div>
                 </nav>
             </div>
