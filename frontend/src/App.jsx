@@ -19,6 +19,7 @@ export default function App() {
         <AuthProvider>
             <BrowserRouter>
                 <Navbar />
+                <MobileAppShell />
 
                 <Routes>
                     <Route path="/" element={<Home />} />
@@ -62,8 +63,6 @@ export default function App() {
                         }
                     />
                 </Routes>
-
-                <MobileAppShell />
             </BrowserRouter>
         </AuthProvider>
     );
